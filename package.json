@@ -1,0 +1,13 @@
+{
+  "name": "@ionos/wordpress-blueprints-light-prototype",
+  "dependencies": {
+    "@wordpress/env": "^10.21.0",
+    "@wordpress/scripts": "^30.14.1"
+  },
+  "scripts": {
+    "start": "pnpm run wp-env start --xdebug --debug | grep -vwi xdebug",
+    "stop": "pnpm run wp-env stop",
+    "destroy": "echo 'y' | pnpm run wp-env destroy",
+    "wp-env" : "WP_ENV_HOME=./wp-env-home wp-env"
+  }
+}

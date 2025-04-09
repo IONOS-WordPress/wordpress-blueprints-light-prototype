@@ -1,0 +1,27 @@
+{
+  "core": null,
+  "phpVersion": "8.3",
+  "plugins": [
+    "./ionos-blueprints-light"
+  ],
+  "themes": [
+    "https://downloads.wordpress.org/theme/twentytwentyfive.zip"
+  ],
+  "env": {
+    "development": {
+      "phpmyadminPort": 9000
+    }
+  },
+  "config": {
+    "SCRIPT_DEBUG": true,
+    "WP_DEBUG": true,
+    "WP_DEBUG_DISPLAY": true,
+    "WP_DEBUG_LOG": true,
+    "SAVEQUERIES": true,
+    "FS_METHOD": "direct",
+    "WP_DEVELOPMENT_MODE": "all"
+  },
+  "lifecycleScripts": {
+    "afterStart": "./wp-env-after-start.sh"
+  }
+}
