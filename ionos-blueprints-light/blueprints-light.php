@@ -24,3 +24,5 @@ if ( ! defined( 'ABSPATH' ) ) {
 \add_action( "init", function() {
    error_log("hey!");
  });
+
+ require_once __DIR__ . '/inc/blueprints/index.php'; 
