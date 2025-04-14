@@ -8,6 +8,7 @@
     "start": "pnpm run wp-env start --xdebug --debug | grep -vwi xdebug",
     "stop": "pnpm run wp-env stop",
     "destroy": "echo 'y' | pnpm run wp-env destroy",
-    "wp-env" : "WP_ENV_HOME=./wp-env-home wp-env"
+    "wp-env" : "WP_ENV_HOME=./wp-env-home wp-env",
+    "go-waas": "./scripts/go-waas.sh"
   }
 }
