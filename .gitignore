@@ -2,3 +2,5 @@
 /.pnpm-store
 /node_modules
 /.vscode/launch.json
+/bin/go-waas
+/.go-waas.env
