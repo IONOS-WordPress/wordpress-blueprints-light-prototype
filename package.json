@@ -5,7 +5,7 @@
     "@wordpress/scripts": "^30.14.1"
   },
   "scripts": {
-    "start": "pnpm run wp-env start --xdebug --debug | grep -vwi xdebug",
+    "start": "pnpm run wp-env start --xdebug | grep -vwi xdebug",
     "stop": "pnpm run wp-env stop",
     "destroy": "echo 'y' | pnpm run wp-env destroy",
     "wp-env" : "WP_ENV_HOME=./wp-env-home wp-env",

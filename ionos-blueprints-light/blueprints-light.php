@@ -17,6 +17,8 @@
 
 namespace ionos_blueprints_light\ionos_blueprints_light;
 
+const FILE = __FILE__;
+
 if ( ! defined( 'ABSPATH' ) ) {
   die();
 }
@@ -25,4 +27,4 @@ if ( ! defined( 'ABSPATH' ) ) {
    error_log("hey!");
  });
 
- require_once __DIR__ . '/inc/blueprints/index.php'; 
+require_once __DIR__ . '/inc/blueprints/index.php';

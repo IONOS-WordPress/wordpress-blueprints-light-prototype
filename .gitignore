@@ -4,3 +4,4 @@
 /.vscode/launch.json
 /bin/go-waas
 /.go-waas.env
+*.pem
