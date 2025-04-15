@@ -2,9 +2,22 @@
 
 /*
 
-  pnpm run wp-env run cli wp cron event list
+  pnpm run wp-env run cli wp --quiet --skip-plugins cron event list
 
-  pnpm run wp-env run cli wp cron event run ionos_blueprints_cron_job
+  pnpm run wp-env run cli wp --quiet --skip-plugins cron event run ionos_blueprints_cron_job
+
+  pnpm run wp-env run cli wp --quiet --skip-plugins option list --search='ionos_blueprints*'
+
+  jobs="$(pnpm -s run wp-env run cli wp --quiet --skip-plugins option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]')"
+  jobs=$(jq '. += [{ 
+    id: 102,
+    type: "set_option",
+    args: {
+      "name": "xxx",
+      "value": "yyy"
+    }
+  }]' <<< "$jobs")
+  pnpm -s run wp-env run cli wp --quiet --skip-plugins option set ionos_blueprints_jobs "$jobs" --format=json
 
 */
 
@@ -29,12 +42,27 @@ const CRON_JOB_MAX_EXECUTION_TIME = 25; // in seconds
   }
 );
 
+/*
 \register_activation_hook(
   file: FILE, 
   callback: function() {
     if (!\wp_next_scheduled(CRON_JOB_HOOK)) {
       \wp_schedule_event(
         timestamp: time() + 10 * MINUTE_IN_SECONDS, // dont start immediately but after 10 minutes
+        recurrence: CRON_JOB_RECURRENCE,  
+        hook: CRON_JOB_HOOK
+      );
+    }
+  }
+);
+*/
+
+\add_action(
+  hook_name: 'init', 
+  callback: function() {
+    if (!\wp_next_scheduled(CRON_JOB_HOOK)) {
+      \wp_schedule_event(
+        timestamp: time(),// + 10 * MINUTE_IN_SECONDS, // dont start immediately but after 10 minutes
         recurrence: CRON_JOB_RECURRENCE,  
         hook: CRON_JOB_HOOK
       );
@@ -58,6 +86,7 @@ const CRON_JOB_MAX_EXECUTION_TIME = 25; // in seconds
   callback: function () {
     $jobs_scheduled = _get_jobs();
     $jobs_done = _get_jobs_done();
+
     $current_time = time();
     
     while(($job = array_shift($jobs_scheduled)) !== null) {
