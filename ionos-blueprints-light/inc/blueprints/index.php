@@ -2,23 +2,36 @@
 
 /*
 
-  pnpm run wp-env run cli wp --quiet --skip-plugins cron event list
+  pnpm run wp-env run cli wp --quiet cron event list
 
-  pnpm run wp-env run cli wp --quiet --skip-plugins cron event run ionos_blueprints_cron_job
+  pnpm run wp-env run cli wp --quiet cron event run ionos_blueprints_cron_job
 
-  pnpm run wp-env run cli wp --quiet --skip-plugins option list --search='ionos_blueprints*'
+  pnpm run wp-env run cli wp --quiet option list --search='ionos_blueprints*'
 
-  jobs="$(pnpm -s run wp-env run cli wp --quiet --skip-plugins option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]')"
-  jobs=$(jq '. += [{ 
-    id: 102,
-    type: "set_option",
-    args: {
-      "name": "xxx",
-      "value": "yyy"
-    }
-  }]' <<< "$jobs")
-  pnpm -s run wp-env run cli wp --quiet --skip-plugins option set ionos_blueprints_jobs "$jobs" --format=json
+  (
+    jobs="$(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]')"
+    jobs=$(jq '. += [{ 
+      id: 102,
+      type: "set_option",
+      args: {
+        "name": "xxx",
+        "value": "yyy"
+      }
+    },
+    { 
+      id: 102,
+      type: "install_plugin",
+      args: {
+        "slug": "simple-local-avatars",
+        "force": true,
+      }
+    }]' <<< "$jobs")
+    pnpm -s run wp-env run cli wp --quiet option set ionos_blueprints_jobs "$jobs" --format=json
+  )
 
+  pnpm run wp-env run wordpress tail -f /var/www/html/wp-content/debug.log | grep -vwi xdebug
+
+  pnpm -s run wp-env run cli wp --quiet option delete ionos_blueprints_jobs
 */
 
 namespace ionos_blueprints_light\ionos_blueprints_light\blueprints;
@@ -42,27 +55,12 @@ const CRON_JOB_MAX_EXECUTION_TIME = 25; // in seconds
   }
 );
 
-/*
-\register_activation_hook(
-  file: FILE, 
-  callback: function() {
-    if (!\wp_next_scheduled(CRON_JOB_HOOK)) {
-      \wp_schedule_event(
-        timestamp: time() + 10 * MINUTE_IN_SECONDS, // dont start immediately but after 10 minutes
-        recurrence: CRON_JOB_RECURRENCE,  
-        hook: CRON_JOB_HOOK
-      );
-    }
-  }
-);
-*/
-
 \add_action(
   hook_name: 'init', 
-  callback: function() {
+  callback: function() : void {
     if (!\wp_next_scheduled(CRON_JOB_HOOK)) {
-      \wp_schedule_event(
-        timestamp: time(),// + 10 * MINUTE_IN_SECONDS, // dont start immediately but after 10 minutes
+      $success = \wp_schedule_event(
+        timestamp: time() + 10 * MINUTE_IN_SECONDS, // dont start immediately but after 10 minutes
         recurrence: CRON_JOB_RECURRENCE,  
         hook: CRON_JOB_HOOK
       );
@@ -83,21 +81,32 @@ const CRON_JOB_MAX_EXECUTION_TIME = 25; // in seconds
 
 \add_action(
   hook_name: CRON_JOB_HOOK, 
-  callback: function () {
+  callback: function () : void {
     $jobs_scheduled = _get_jobs();
     $jobs_done = _get_jobs_done();
 
     $current_time = time();
     
     while(($job = array_shift($jobs_scheduled)) !== null) {
-      $jobResult = _execute_job($job);
+      $result = _execute_job($job);
+      if (isset($result['error'])) {
+        error_log($result['error']);
+      }
 
       \update_option(OPTION_JOBS_SCHEDULED, $jobs_scheduled);
 
-      $jobs_done[] = $jobResult;
+      $jobs_done[] = $result;
       \update_option(OPTION_JOBS_DONE, $jobs_done);
 
       if (time() - $current_time > CRON_JOB_MAX_EXECUTION_TIME) {
+        // if there are still jobs scheduled, reschedule the cron job
+        // to run again in 10 seconds
+        if(count($jobs_scheduled) > 0) {
+          \wp_schedule_single_event(
+            timestamp: time() + 10, 
+            hook: CRON_JOB_HOOK
+          );
+        }
         break;
       }
     }
@@ -112,17 +121,58 @@ function _send_jobs_done() {
   if (!empty($jobs_done)) {
     // @FIXME: send proceeded job results back to hosting platform
     
-    // // reset jobs done
-    // \update_option(OPTION_JOBS_DONE, []);
+    // reset jobs done
+    \update_option(OPTION_JOBS_DONE, []);
   }
 }
 
-function _execute_job(array $job) : array {
-  // @TODO: Implement the logic to execute the job
-  return $job;
+function _create_job_error(string $message, array $job) : array {
+  return [
+    'error' => $message,
+    'id' => $job['id'],
+    'args' => $job,
+  ];
 }
 
-function _get_jobs() {
+function _execute_job(array $job) : array {
+  $HOOK_NAME = CRON_JOB_HOOK . '_' . $job['type'];
+  if (!has_filter($HOOK_NAME)) {
+    return _create_job_error(
+      sprintf(
+        '%s : no filter registered for job "%s"(hook_name="%s"). payload was %s',
+        CRON_JOB_HOOK,
+        $job['type'],
+        $HOOK_NAME,
+        \wp_json_encode($job)
+      ),      
+      $job
+    );
+  } else {
+    $result = \apply_filters(
+      hook_name: $HOOK_NAME,
+      value: $job
+    );
+
+    if(!is_array($result)) {
+      $result = _create_job_error(
+        sprintf(
+          '%s : filter "%s"(hook_name="%s") returned a non array result. result was %s',
+          CRON_JOB_HOOK,
+          $job['type'],
+          $HOOK_NAME,
+          \wp_json_encode($result)
+        ),
+        $job
+      );
+    }
+  }
+
+  $result['id'] = $job['id'];
+
+  return $result;
+}
+
+function _get_jobs() : array {
   $jobs_scheduled = \get_option(OPTION_JOBS_SCHEDULED, []);
   return $jobs_scheduled;
 }
@@ -132,4 +182,8 @@ function _get_jobs_done() {
   return $jobs_done;
 }
 
+# load all job definitions
+foreach (glob(__DIR__ . '/jobs/*.php') as $file) {
+  require_once $file;
+}
 
