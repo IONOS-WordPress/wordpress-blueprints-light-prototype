@@ -76,6 +76,10 @@ for prefix in '' 'tests-' ; do
     
     # activate all installed plugins in all wp-env instances (test and development)
     wp --quiet --skip-plugins plugin activate --all
+
+    # Install the localhost2host-docker-internal plugin as an mu-plugin
+    wp --quiet --skip-plugins plugin install https://downloads.wordpress.org/plugin/localhost2host-docker-internal.zip
+    mv /var/www/html/wp-content/plugins/localhost2host-docker-internal /var/www/html/wp-content/mu-plugins/
 EOF
 done
 # echo elapsed time in seconds splitted by . as thousand separator
