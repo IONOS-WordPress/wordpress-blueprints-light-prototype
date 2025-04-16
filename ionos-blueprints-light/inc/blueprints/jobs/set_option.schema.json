@@ -3,6 +3,15 @@
   "type": "object",
   "description": "This schema defines the structure of the set_option job payload.",
   "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique id of this job."
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of this job.",
+      "const": "set_option"
+    },
     "name": {
       "type": "string",
       "description": "The name of the wordpress option to set."
@@ -17,5 +26,5 @@
       "description": "The autoload value of the wordpress option to set. If null, the autoload value will not be set."
     }
   },
-  "required": ["name", "value"]
+  "required": ["name", "value", "id", "type"]
 }

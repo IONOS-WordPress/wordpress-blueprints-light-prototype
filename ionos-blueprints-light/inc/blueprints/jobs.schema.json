@@ -1,0 +1,14 @@
+{
+  "type": "array",
+  "description": "This schema defines the jobs data structure.",
+  "items": {
+    "oneOf": [
+      {
+        "$ref": "jobs/install_plugin.schema.json"
+      },
+      {
+        "$ref": "jobs/set_option.schema.json"
+      }
+   ]
+  }
+}
