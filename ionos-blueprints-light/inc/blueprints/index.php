@@ -42,9 +42,28 @@ const OPTION_JOBS_SCHEDULED = 'ionos_blueprints_jobs';
 const OPTION_JOBS_DONE = 'ionos_blueprints_jobs_done';
 
 const CRON_JOB_HOOK = 'ionos_blueprints_cron_job';
+const CRON_JOB_HOOK_DONE_ACTION = OPTION_JOBS_DONE . '_action';
 const CRON_JOB_RECURRENCE = 'ionos_blueprints_cron_job_recurrence';
 
-const CRON_JOB_MAX_EXECUTION_TIME = 25; // in seconds
+if ( ! defined( 'ABSPATH' ) ) {
+  die();
+}
+
+function _get_max_execution_time() {
+  if(defined('CRON_JOB_MAX_EXECUTION_TIME')) {
+    return constant('CRON_JOB_MAX_EXECUTION_TIME');
+  } else {
+    return 25;
+  }
+}
+
+function _cron_job_next_tick_delay() {
+  if(defined('CRON_JOB_NEXT_TICK_DELAY')) {
+    return constant('CRON_JOB_NEXT_TICK_DELAY');
+  } else {
+    return 10;
+  }
+}
 
 \register_deactivation_hook(
   file: FILE, 
@@ -98,12 +117,12 @@ const CRON_JOB_MAX_EXECUTION_TIME = 25; // in seconds
       $jobs_done[] = $result;
       \update_option(OPTION_JOBS_DONE, $jobs_done);
 
-      if (time() - $current_time > CRON_JOB_MAX_EXECUTION_TIME) {
+      if (time() - $current_time > _get_max_execution_time()) {
         // if there are still jobs scheduled, reschedule the cron job
         // to run again in 10 seconds
         if(count($jobs_scheduled) > 0) {
           \wp_schedule_single_event(
-            timestamp: time() + 10, 
+            timestamp: time() + _cron_job_next_tick_delay(), 
             hook: CRON_JOB_HOOK
           );
         }
@@ -111,20 +130,20 @@ const CRON_JOB_MAX_EXECUTION_TIME = 25; // in seconds
       }
     }
 
-    _send_jobs_done();
+    \do_action( CRON_JOB_HOOK_DONE_ACTION, $jobs_done);
   }
 );
 
-function _send_jobs_done() {
+\add_action( CRON_JOB_HOOK_DONE_ACTION, function(array $jobs_done) : void {
   $jobs_done = _get_jobs_done();
-
+  
   if (!empty($jobs_done)) {
     // @FIXME: send proceeded job results back to hosting platform
-    
+
     // reset jobs done
     \update_option(OPTION_JOBS_DONE, []);
   }
-}
+});
 
 function _create_job_error(string $message, array $job) : array {
   return [
