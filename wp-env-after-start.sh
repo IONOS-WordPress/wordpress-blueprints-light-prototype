@@ -41,12 +41,16 @@ cat << EOF > '.vscode/launch.json'
         // phpunit test path mappings
         "/wordpress-phpunit/includes": "\${workspaceFolder}/${WPENV_INSTALLPATH}/tests-WordPress-PHPUnit/tests/phpunit/includes",
         "/home/$USER/.composer/vendor": "\${workspaceFolder}/phpunit/vendor",
-
       }
     }
   ]
 }
 EOF
+
+# phpunit : install missing yoast/phpunit-polyfills
+# this is neeed to run the tests in the WordPress environment
+# @TODO: dont know why this is not automatically installed by wp-env, investigate into issue and fix it in wp-env
+pnpm wp-env run tests-wordpress composer global require yoast/phpunit-polyfills:"^3.0" -W --dev
 
 # remove dolly demo plugin
 rm -f $WPENV_INSTALLPATH/{tests-WordPress,WordPress}/wp-content/plugins/hello.php
