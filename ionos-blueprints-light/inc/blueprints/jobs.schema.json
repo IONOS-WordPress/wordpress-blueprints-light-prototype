@@ -7,6 +7,9 @@
         "$ref": "jobs/install_plugin.schema.json"
       },
       {
+        "$ref": "jobs/activate_plugin.schema.json"
+      },
+      {
         "$ref": "jobs/set_option.schema.json"
       }
    ]

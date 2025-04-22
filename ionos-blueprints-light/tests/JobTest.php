@@ -500,7 +500,9 @@ class JobTest extends \WP_UnitTestCase {
         ]
       ],
     ]);
+
     \do_action(CRON_JOB_HOOK);
+
     $this->assertEqualsCanonicalizing(
       [
         [
@@ -518,6 +520,5 @@ class JobTest extends \WP_UnitTestCase {
       ], 
       $jobs_done
     );
-
- }
+  }
 }
