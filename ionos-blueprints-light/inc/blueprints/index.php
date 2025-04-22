@@ -61,6 +61,7 @@ function _cron_job_next_tick_delay() {
   if(defined('CRON_JOB_NEXT_TICK_DELAY')) {
     return constant('CRON_JOB_NEXT_TICK_DELAY');
   } else {
+    // default will be 10 seconds
     return 10;
   }
 }
@@ -77,10 +78,10 @@ function _cron_job_next_tick_delay() {
 \add_action(
   hook_name: 'init', 
   callback: function() : void {
-    if (!\wp_next_scheduled(CRON_JOB_HOOK)) {
+    if (\wp_next_scheduled(CRON_JOB_HOOK)===false) {
       $success = \wp_schedule_event(
-        timestamp: time() + 10 * MINUTE_IN_SECONDS, // dont start immediately but after 10 minutes
-        recurrence: CRON_JOB_RECURRENCE,  
+        timestamp: time() + 10 * MINUTE_IN_SECONDS, // start first 10 minutes after first scheduling
+        recurrence: CRON_JOB_RECURRENCE, 
         hook: CRON_JOB_HOOK
       );
     }

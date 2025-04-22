@@ -7,10 +7,10 @@ use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK
 \add_filter( CRON_JOB_HOOK . '_install_plugin', function(array $payload) : array {
   $args = $payload['args'];
   
-  if( !isset($args['slug'])) {
+  if( !isset($args['slug']) && !isset($args['url'])) {
     return _create_job_error(
       sprintf(
-        '%s : job "%s" requires "slug" in args. payload was %s',
+        '%s : job "%s" requires "slug" and "url" in args. payload was %s',
         CRON_JOB_HOOK,
         $payload['type'],
         \wp_json_encode($payload)
@@ -105,7 +105,8 @@ use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK
       $payload
     );
   }
-
+  
+  \wp_cache_delete('plugins', 'plugins');
   return [
     'success' => $success
   ];

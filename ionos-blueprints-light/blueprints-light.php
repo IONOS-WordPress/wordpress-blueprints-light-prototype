@@ -18,6 +18,7 @@
 namespace ionos_blueprints_light\ionos_blueprints_light;
 
 const FILE = __FILE__;
+const SLUG = 'ionos-blueprints-light/blueprints-light.php';
 
 if ( ! defined( 'ABSPATH' ) ) {
   die();
