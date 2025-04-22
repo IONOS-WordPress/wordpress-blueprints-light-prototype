@@ -7,7 +7,7 @@
   "scripts": {
     "start": "pnpm run wp-env start --xdebug | grep -vwi xdebug",
     "stop": "pnpm run wp-env stop",
-    "test": "pnpm run wp-env run tests-cli --env-cwd=wp-content/plugins/ionos-blueprints-light bash -c 'phpunit --debug --no-interaction --do-not-cache-result --prepend ~/.composer/vendor/autoload.php --bootstrap $WP_TESTS_DIR/includes/bootstrap.php ./tests'",
+    "test": "./scripts/test.sh",
     "destroy": "echo 'y' | pnpm run wp-env destroy",
     "wp-env" : "WP_ENV_HOME=./wp-env-home wp-env",
     "go-waas": "./scripts/go-waas.sh"
