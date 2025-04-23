@@ -4,6 +4,10 @@ namespace ionos_blueprints_light\ionos_blueprints_light\blueprints;
 
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
 
+if ( ! defined( 'ABSPATH' ) ) {
+  die();
+}
+
 \add_filter( CRON_JOB_HOOK . '_install_plugin', function(array $payload) : array {
   $args = $payload['args'];
   

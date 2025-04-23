@@ -2,36 +2,73 @@
 
 /*
 
-  pnpm run wp-env run cli wp --quiet cron event list
+# reset instance
 
-  pnpm run wp-env run cli wp --quiet cron event run ionos_blueprints_cron_job
+pnpm -s run wp-env run cli wp --quiet option delete ionos_blueprints_jobs ionos_blueprints_jobs_done foo 2>/dev/null
+pnpm -s run wp-env run cli wp --quiet plugin deactivate hello-dolly 2>/dev/null
+pnpm -s run wp-env run cli wp --quiet plugin delete hello-dolly 2>/dev/null
 
-  pnpm run wp-env run cli wp --quiet option list --search='ionos_blueprints*'
+# inject new jobs
 
-  (
-    jobs="$(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]')"
-    jobs=$(jq '. += [{ 
-      id: 102,
+jobs="$(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]')"
+jobs=$(jq '. += [
+    { 
+      id: 100,
+      type: "install_plugin",
+      args: {
+        "url": "https://downloads.wordpress.org/plugin/hello-dolly.zip",
+        "slug": "hello-dolly/hello.php"
+      }
+    },
+    { 
+      id: 101,
       type: "set_option",
       args: {
-        "name": "xxx",
-        "value": "yyy"
+        "name": "foo",
+        "value": "bar"
       }
     },
     { 
       id: 102,
-      type: "install_plugin",
+      type: "activate_plugin",
       args: {
-        "slug": "simple-local-avatars",
-        "force": true,
+        "slug": "hello-dolly/hello.php"
       }
-    }]' <<< "$jobs")
-    pnpm -s run wp-env run cli wp --quiet option set ionos_blueprints_jobs "$jobs" --format=json
-  )
+    }
+]' <<< "$jobs")
+pnpm -s run wp-env run cli wp --quiet option set ionos_blueprints_jobs "$jobs" --format=json
 
-  pnpm run wp-env run wordpress tail -f /var/www/html/wp-content/debug.log | grep -vwi xdebug
+# reset jobs_done
+pnpm -s run wp-env run cli wp --quiet option set ionos_blueprints_jobs_done "[]" --format=json
 
-  pnpm -s run wp-env run cli wp --quiet option delete ionos_blueprints_jobs
+# check jobs done 
+
+echo $(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs_done --format=json 2>/dev/null || echo '[]') | jq .
+
+# check enqueued jobs
+
+echo $(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]') | jq .
+
+# trigger processing jobs
+
+pnpm -s run wp-env run cli wp --quiet cron event run ionos_blueprints_cron_job
+
+# list active plugins
+
+pnpm -s run wp-env run cli wp --quiet plugin list
+
+# list ionos blueprints options
+
+pnpm -s run wp-env run cli wp --quiet option list --search='ionos_blueprints*' 2>/dev/null
+
+# list foo property
+
+pnpm -s run wp-env run cli wp --quiet option list --search='foo' 2>/dev/null
+
+# list cron jobs
+
+pnpm run wp-env run cli wp --quiet cron event list
+
 */
 
 namespace ionos_blueprints_light\ionos_blueprints_light\blueprints;
@@ -142,7 +179,7 @@ function _cron_job_next_tick_delay() {
     // @FIXME: send proceeded job results back to hosting platform
 
     // reset jobs done
-    \update_option(OPTION_JOBS_DONE, []);
+    // \update_option(OPTION_JOBS_DONE, []);
   }
 });
 

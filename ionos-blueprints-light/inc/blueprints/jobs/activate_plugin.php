@@ -4,6 +4,10 @@ namespace ionos_blueprints_light\ionos_blueprints_light\blueprints;
 
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
 
+if ( ! defined( 'ABSPATH' ) ) {
+  die();
+}
+
 \add_filter( CRON_JOB_HOOK . '_activate_plugin', function(array $payload) : array {
   $args = $payload['args'];
   
@@ -22,12 +26,12 @@ use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK
   $slug = $args['slug'];
   $force = $args['force'] ?? false;
 
-  $success = \activate_plugin($slug); 
+  $success = \activate_plugin($slug);
 
-  if($success !== true && $force===false) {
+  if($success !== null && $force===false) {
     return _create_job_error(
       sprintf(
-        '%s : job "%s" failed to unzip plugin "%s". ',
+        '%s : job "%s" failed to activate plugin "%s". ',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug,
@@ -38,6 +42,6 @@ use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK
   }
     
   return [
-    'success' => $force ? true : $success,
+    'success' => $force || $success===false ? true : false,
   ];
 });

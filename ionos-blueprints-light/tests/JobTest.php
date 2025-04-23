@@ -105,6 +105,8 @@ class JobTest extends \WP_UnitTestCase {
     \do_action(CRON_JOB_HOOK);
     $this->assertSame( \get_option('foo'), 20, 'option "foo" should be set to 20 after action is triggered');
     $this->assertEmpty(\get_option(OPTION_JOBS_SCHEDULED, []), 'jobs should be empty');
+
+    \update_option(OPTION_JOBS_DONE, []);
     $this->assertEqualsCanonicalizing([], \get_option(OPTION_JOBS_DONE, []));
 
     \update_option(OPTION_JOBS_SCHEDULED, [
@@ -140,6 +142,7 @@ class JobTest extends \WP_UnitTestCase {
     $jobs_done = [];
     \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
       $jobs_done = array_merge($jobs_done, $jobs);
+      \update_option(OPTION_JOBS_DONE, []);
       return $jobs;
     });
 
@@ -233,6 +236,7 @@ class JobTest extends \WP_UnitTestCase {
     $jobs_done = [];
     \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
       $jobs_done = array_merge($jobs_done, $jobs);
+      \update_option(OPTION_JOBS_DONE, []);
       return $jobs;
     });
 
@@ -299,6 +303,7 @@ class JobTest extends \WP_UnitTestCase {
     $jobs_done = [];
     \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
       $jobs_done = array_merge($jobs_done, $jobs);
+      \update_option(OPTION_JOBS_DONE, []);
       return $jobs;
     });
 
@@ -378,6 +383,7 @@ class JobTest extends \WP_UnitTestCase {
     $jobs_done = [];
     \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
       $jobs_done = array_merge($jobs_done, $jobs);
+      \update_option(OPTION_JOBS_DONE, []);
       return $jobs;
     });
 
@@ -405,6 +411,7 @@ class JobTest extends \WP_UnitTestCase {
 
     # test installing hello-dolly plugin again and firefox-counter plugin
     $jobs_done = [];
+    \update_option(OPTION_JOBS_DONE, []);
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
         'id' => 2,
@@ -438,6 +445,7 @@ class JobTest extends \WP_UnitTestCase {
 
     # test force installing hello-dolly plugin
     $jobs_done = [];
+    \update_option(OPTION_JOBS_DONE, []);
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
         'id' => 4,
@@ -467,8 +475,10 @@ class JobTest extends \WP_UnitTestCase {
   */
   function test_complex_example() {
     $jobs_done = [];
+    \update_option(OPTION_JOBS_DONE, []);
     \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
       $jobs_done = array_merge($jobs_done, $jobs);
+      \update_option(OPTION_JOBS_DONE, []);
       return $jobs;
     });
 
