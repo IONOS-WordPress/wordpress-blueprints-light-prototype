@@ -13,19 +13,25 @@
       "description": "The type of this job.",
       "const": "install_plugin"
     },
-    "slug": {
-      "type": "string",
-      "description": "The slug of the wordpress plugin to install or an https url to download the plugin from."
-    },
-    "url": {
-      "type": "string",
-      "description": "The url to download the plugin from. If not given the url will be generated from the slug to point to wordpress.org."
-    },
-    "force": {
-      "type": "boolean",
-      "default": false,
-      "description": "If true, the plugin will uninstall a potentially existing instance of this plugin"
+    "args" : {
+      "type": "object",
+      "properties" : {
+        "slug": {
+          "type": "string",
+          "description": "The slug of the wordpress plugin to install or an https url to download the plugin from."
+        },
+        "url": {
+          "type": "string",
+          "description": "The url to download the plugin from. If not given the url will be generated from the slug to point to wordpress.org."
+        },
+        "force": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the plugin will uninstall a potentially existing instance of this plugin"
+        }
+      },
+      "required": ["slug", "url"]
     }
   },
-  "required": ["slug", "id", "type"]
+  "required": ["args", "id", "type"]
 }

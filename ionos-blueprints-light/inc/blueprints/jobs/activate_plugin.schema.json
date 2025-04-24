@@ -13,15 +13,21 @@
       "description": "The type of this job.",
       "const": "activate_plugin"
     },
-    "slug": {
-      "type": "string",
-      "description": "The slug of the wordpress plugin to install or an https url to download the plugin from."
-    },
-    "force": {
-      "type": "boolean",
-      "default": false,
-      "description": "If true, the plugin will uninstall a potentially existing instance of this plugin"
+    "args" : {
+      "type": "object",
+      "properties" : {
+        "slug": {
+          "type": "string",
+          "description": "The slug of the wordpress plugin to install or an https url to download the plugin from."
+        },
+        "force": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the plugin will uninstall a potentially existing instance of this plugin"
+        }
+      },
+      "required": ["slug"]
     }
   },
-  "required": ["slug", "id", "type"]
+  "required": ["args", "type", "id"]
 }
