@@ -74,7 +74,7 @@ class JobTest extends \WP_UnitTestCase {
     
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
         'args' => [
           'option' => 'foo',
@@ -92,7 +92,7 @@ class JobTest extends \WP_UnitTestCase {
     
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
         'args' => [
           'option' => 'foo',
@@ -111,7 +111,7 @@ class JobTest extends \WP_UnitTestCase {
 
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
         'args' => [
           'option' => 'foo',
@@ -119,7 +119,7 @@ class JobTest extends \WP_UnitTestCase {
         ]
         ],
         [
-          'id' => 2,
+          'id' => wp_generate_uuid4(),
           'type' => self::CUSTOM_JOB_TYPE,
           'args' => [
             'option' => 'foo',
@@ -146,9 +146,11 @@ class JobTest extends \WP_UnitTestCase {
       return $jobs;
     });
 
+    $uuids = [];
+
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
         'args' => [
           'option' => 'my_counter',
@@ -161,7 +163,7 @@ class JobTest extends \WP_UnitTestCase {
 
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
         'args' => [
           'option' => 'my_counter',
@@ -169,7 +171,7 @@ class JobTest extends \WP_UnitTestCase {
         ]
       ],
       [
-        'id' => 1,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
         'args' => [
           'option' => 'my_counter',
@@ -184,17 +186,17 @@ class JobTest extends \WP_UnitTestCase {
         [
           'success' => true,
           'value' => 10,
-          'id' => 1
+          'id' => $uuids[0],
         ],
         [
           'success' => true,
           'value' => 11,
-          'id' => 1
+          'id' => $uuids[1],
         ],
         [
           'success' => true,
           'value' => 13,
-          'id' => 1
+          'id' => $uuids[2],
         ]
       ], 
       $jobs_done
@@ -233,6 +235,7 @@ class JobTest extends \WP_UnitTestCase {
       ];
     });
     $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
+
     $jobs_done = [];
     \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
       $jobs_done = array_merge($jobs_done, $jobs);
@@ -240,17 +243,19 @@ class JobTest extends \WP_UnitTestCase {
       return $jobs;
     });
 
+    // force that our whole jobs cannot be executed within the allowed time frame
     define('CRON_JOB_MAX_EXECUTION_TIME', 1);
+    $uuids = [];
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => $SLEEP_JOB_TYPE,
         'args' => [
           'value'=> 2
         ]
       ],
       [
-        'id' => 1,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'set_option',
         'args' => [
           'name' => 'foo',
@@ -267,7 +272,7 @@ class JobTest extends \WP_UnitTestCase {
     $this->assertEqualsCanonicalizing(
       [
         [
-          'id' => 1,
+          'id' => $uuids[0],
           'value' => 2,
         ],
       ], 
@@ -278,15 +283,16 @@ class JobTest extends \WP_UnitTestCase {
     \do_action(CRON_JOB_HOOK);
 
     // ensure rest of jobs was executed
-    $this->assertEquals( 'bar', \get_option('foo'), 'option foo should not be set to "bar"');
+    $this->assertEquals( 'bar', \get_option('foo'), 'option foo should be set to "bar"');
+
     $this->assertEqualsCanonicalizing(
       [
         [
-          'id' => 1,
+          'id' => $uuids[0],
           'value' => 2,
         ],
         [
-          'id' => 1,
+          'id' => $uuids[1],
           'success' => true,
         ],
       ], 
@@ -307,9 +313,10 @@ class JobTest extends \WP_UnitTestCase {
       return $jobs;
     });
 
+    $uuids = [];
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'set_option',
         'args' => [
           'name' => 'foo',
@@ -323,7 +330,7 @@ class JobTest extends \WP_UnitTestCase {
 
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 2,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'set_option',
         'args' => [
           'name' => 'foo',
@@ -331,7 +338,7 @@ class JobTest extends \WP_UnitTestCase {
         ]
       ],
       [
-        'id' => 3,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'set_option',
         'args' => [
           'name' => 'foo',
@@ -346,16 +353,16 @@ class JobTest extends \WP_UnitTestCase {
       [
         [
           'success' => true,
-          'id' => 1
+          'id' => $uuids[0],
         ],
         [
           'success' => true,
-          'id' => 2
+          'id' => $uuids[1],
         ],
         [
           'success' => true,
-          'id' => 3
-        ]
+          'id' => $uuids[2],
+        ],
       ], 
       $jobs_done
     );
@@ -387,34 +394,36 @@ class JobTest extends \WP_UnitTestCase {
       return $jobs;
     });
 
+    $uuids = [];
     # test installing hello-dolly plugin
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'install_plugin',
         'args' => [
           'url' => 'https://downloads.wordpress.org/plugin/hello-dolly.zip',
           'slug' => 'hello-dolly',
-        ]
-      ]
+        ],
+      ],
     ]);
     \do_action(CRON_JOB_HOOK);
     $this->assertEqualsCanonicalizing(
       [
         [
           'success' => true,
-          'id' => 1
-        ]
+          'id' => $uuids[0],
+        ],
       ], 
       $jobs_done
     );
 
     # test installing hello-dolly plugin again and firefox-counter plugin
     $jobs_done = [];
+    $uuids = [];
     \update_option(OPTION_JOBS_DONE, []);
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 2,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'install_plugin',
         'args' => [
           'url' => 'https://downloads.wordpress.org/plugin/hello-dolly.zip',
@@ -422,7 +431,7 @@ class JobTest extends \WP_UnitTestCase {
         ],
       ],
       [
-        'id' => 3,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'install_plugin',
         'args' => [
           'url' => 'https://downloads.wordpress.org/plugin/firefox-counter.zip',
@@ -438,17 +447,18 @@ class JobTest extends \WP_UnitTestCase {
     $this->assertEqualsCanonicalizing(
       [
         'success' => true,
-        'id' => 3
+        'id' => $uuids[1],
       ],
       $jobs_done[1]
     );
 
     # test force installing hello-dolly plugin
     $jobs_done = [];
+    $uuids=[];
     \update_option(OPTION_JOBS_DONE, []);
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 4,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'install_plugin',
         'args' => [
           'url' => 'https://downloads.wordpress.org/plugin/hello-dolly.zip',
@@ -463,8 +473,8 @@ class JobTest extends \WP_UnitTestCase {
       [
         [
           'success' => true,
-          'id' => 4
-        ]
+          'id' => $uuids[0],
+        ],
       ],
       $jobs_done
     );
@@ -475,6 +485,7 @@ class JobTest extends \WP_UnitTestCase {
   */
   function test_complex_example() {
     $jobs_done = [];
+    $uuids = [];
     \update_option(OPTION_JOBS_DONE, []);
     \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
       $jobs_done = array_merge($jobs_done, $jobs);
@@ -485,7 +496,7 @@ class JobTest extends \WP_UnitTestCase {
     # test installing hello-dolly plugin
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
-        'id' => 1,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'install_plugin',
         'args' => [
           'url' => 'https://downloads.wordpress.org/plugin/hello-world.zip',
@@ -494,7 +505,7 @@ class JobTest extends \WP_UnitTestCase {
         ]
       ],
       [
-        'id' => 2,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'activate_plugin',
         'args' => [
           'slug' => 'hello-world/hello-world.php',
@@ -502,7 +513,7 @@ class JobTest extends \WP_UnitTestCase {
         ]
       ],
       [
-        'id' => 3,
+        'id' => $uuids[]=wp_generate_uuid4(),
         'type' => 'set_option',
         'args' => [
           'name' => 'hello_world_lyrics',
@@ -517,15 +528,15 @@ class JobTest extends \WP_UnitTestCase {
       [
         [
           'success' => true,
-          'id' => 1
+          'id' => $uuids[0],
         ],
         [
           'success' => true,
-          'id' => 2
+          'id' => $uuids[1],
         ],
         [
           'success' => true,
-          'id' => 3
+          'id' => $uuids[2],
         ]
       ], 
       $jobs_done

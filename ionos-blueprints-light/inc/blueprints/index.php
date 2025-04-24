@@ -13,7 +13,7 @@ pnpm -s run wp-env run cli wp --quiet plugin delete hello-dolly 2>/dev/null
 jobs="$(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]')"
 jobs=$(jq '. += [
     { 
-      id: 100,
+      id: "5fd8850f-ddb6-42f4-a63e-8eab98ea7f9b",
       type: "install_plugin",
       args: {
         "url": "https://downloads.wordpress.org/plugin/hello-dolly.zip",
@@ -21,7 +21,7 @@ jobs=$(jq '. += [
       }
     },
     { 
-      id: 101,
+      id: "71d59ac9-2de6-4fc2-829f-57179b25ec89",
       type: "set_option",
       args: {
         "name": "foo",
@@ -29,7 +29,7 @@ jobs=$(jq '. += [
       }
     },
     { 
-      id: 102,
+      id: "1f290990-3a61-4da3-9e5d-4b8581467761",
       type: "activate_plugin",
       args: {
         "slug": "hello-dolly/hello.php"
@@ -234,7 +234,7 @@ function _get_jobs() : array {
   return $jobs_scheduled;
 }
 
-function _get_jobs_done() {
+function _get_jobs_done() : array {
   $jobs_done = \get_option(OPTION_JOBS_DONE, []);
   return $jobs_done;
 }
