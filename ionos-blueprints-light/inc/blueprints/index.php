@@ -78,6 +78,7 @@ use const ionos_blueprints_light\ionos_blueprints_light\FILE;
 const OPTION_JOBS_SCHEDULED = 'ionos_blueprints_jobs';
 const OPTION_JOBS_DONE = 'ionos_blueprints_jobs_done';
 
+const JOB_VALIDATION_HOOK_PREFIX = 'ionos_blueprints_job_validation_';
 const CRON_JOB_HOOK = 'ionos_blueprints_cron_job';
 const CRON_JOB_HOOK_DONE_ACTION = OPTION_JOBS_DONE . '_action';
 const CRON_JOB_RECURRENCE = 'ionos_blueprints_cron_job_recurrence';
@@ -103,6 +104,9 @@ function _cron_job_next_tick_delay() {
   }
 }
 
+/**
+ * cleanup persisted options and cron jobs
+ */ 
 \register_deactivation_hook(
   file: FILE, 
   callback: function () {
@@ -112,6 +116,9 @@ function _cron_job_next_tick_delay() {
   }
 );
 
+/**
+ * register cron job
+ */
 \add_action(
   hook_name: 'init', 
   callback: function() : void {
@@ -124,6 +131,78 @@ function _cron_job_next_tick_delay() {
     }
   }
 );
+
+/**
+ * validate and sanitize jobs according to their json schema definition
+ */
+
+function enqueue_jobs(array $jobs) : bool|\WP_Error {
+  foreach ($jobs as $index => $job) {
+    if(!is_array($job)) {
+      return new \WP_Error(
+        'invalid_job',
+        sprintf('job(=%s) is not an array', json_encode($job)),
+        $job,
+      );
+    }
+
+    if(!isset($job['type'])) {
+      return new \WP_Error(
+        'invalid_job_type',
+        'job has no "type" property',
+        $job,
+      );
+    }
+
+    $job_type = $job['type'];
+
+    if(!\has_filter(CRON_JOB_HOOK . '_' . $job_type)) {
+      return new \WP_Error(
+        'invalid_job_type',
+        sprintf('job type "%s"(filter=%s) is unknown : No filter registered', $job_type, CRON_JOB_HOOK . '_' . $job_type),
+        $job,
+      );
+    }
+
+    if(!\has_filter(JOB_VALIDATION_HOOK_PREFIX . $job_type)) {
+      error_log(sprintf(
+        'job(=%s) has no validation filter registered for type "%s"',
+        $job_type,
+        \wp_json_encode($job),
+      ));
+      continue;
+    }
+
+    // validate filter against json schema
+    $result = \apply_filters(
+      hook_name: JOB_VALIDATION_HOOK_PREFIX . $job_type,
+      value: $job
+    );
+
+    if(is_wp_error($result)) {
+      return new  \WP_Error(
+        'invalid_job',
+        sprintf(
+          'job(=%s) is not valid according to schema. %s',
+          \wp_json_encode($job),
+          $result->get_error_message()
+        ),
+        [
+          'job' => $job,
+          'error' => $result,
+        ]
+      );
+    }
+
+    $jobs[$index] = $result;
+  }
+
+  // merge new jobs and already enqueued jobs
+  $jobs_scheduled = \get_option(OPTION_JOBS_SCHEDULED, []);
+  \update_option(OPTION_JOBS_SCHEDULED, array_merge($jobs_scheduled, $jobs));
+
+  return true;
+}
 
 \add_filter(
   hook_name: 'cron_schedules', 
@@ -239,8 +318,68 @@ function _get_jobs_done() : array {
   return $jobs_done;
 }
 
-# load all job definitions
-foreach (glob(__DIR__ . '/jobs/*.php') as $file) {
-  require_once $file;
+function _add_filter_job_validation(string $job_type, array $json_schema) : void {
+  \add_filter(
+    hook_name: JOB_VALIDATION_HOOK_PREFIX . $job_type,
+    callback: function(array $job) use ($json_schema, $job_type) {
+      $job = \rest_sanitize_value_from_schema(
+        value: $job,
+        args: $json_schema,
+        param: $job_type
+      );
+      $result = \rest_validate_value_from_schema(
+        value: $job,
+        args: $json_schema,
+        param: $job_type
+      );
+
+      return \is_wp_error($result) ? $result : $job;
+    },
+  );
 }
 
+/**
+ * loads job types (each in a separate php file) and registers the json schema for the job 
+ * the json schema is later on used to validate the job arguments before job execution
+ * 
+ * @param $path to load job types
+ */
+function _load_job_types(string $path) : void {
+  # load all job definitions
+  foreach (glob($path . '/*.php') as $file) {
+    require_once $file;
+    
+    $schema_file = preg_replace('/\.php$/', '.schema.json', $file);
+    if(!file_exists($schema_file)) {
+      error_log(sprintf(
+        'Schema file "%s" not found for job "%s"',
+        $schema_file,
+        $file
+      ));
+      continue;
+    }
+
+    $json_schema = \wp_json_file_decode($schema_file, ['associative' => true]);
+    if($json_schema === null) {
+      error_log(sprintf(
+        'Schema file "%s" is not valid json',
+        $schema_file
+      ));
+      continue;
+    }
+
+    if(!isset($json_schema['type'])) {
+      error_log(sprintf(
+        'Schema(file=%s) is not a valid JSON Schema. Missing "type" property in "%s"',
+        $schema_file,
+        $json_schema,
+      ));
+      continue;
+    }
+
+    $job_type = basename($file, '.php');
+    _add_filter_job_validation($job_type, $json_schema);
+  }
+}
+
+_load_job_types(__DIR__ . '/jobs');

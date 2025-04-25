@@ -2,8 +2,6 @@
 
 namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
 
-use Exception;
-
 use function ionos_blueprints_light\ionos_blueprints_light\blueprints\_create_job_error;
 
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;

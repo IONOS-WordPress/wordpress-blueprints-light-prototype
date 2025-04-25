@@ -49,7 +49,6 @@ EOF
 
 # phpunit : install missing yoast/phpunit-polyfills
 # this is neeed to run the tests in the WordPress environment
-# @TODO: dont know why this is not automatically installed by wp-env, investigate into issue and fix it in wp-env
 pnpm wp-env run tests-wordpress composer global require yoast/phpunit-polyfills:"^3.0" -W --dev
 
 # remove dolly demo plugin
