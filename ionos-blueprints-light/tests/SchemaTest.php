@@ -90,7 +90,7 @@ class SchemaTest extends \WP_UnitTestCase {
     $this->assertEqualsCanonicalizing([$JOB], \get_option(OPTION_JOBS_SCHEDULED));
   }  
 
-  function test_job_args_defaults() {
+  function test_manual_job_registration() {
     // declare a simple job adding 2 number arguments left and right
     \add_filter(
       hook_name:CRON_JOB_HOOK . '_' . __FUNCTION__,
@@ -145,41 +145,5 @@ class SchemaTest extends \WP_UnitTestCase {
     $scheduled_jobs = \get_option(OPTION_JOBS_SCHEDULED);
     $this->assertCount(1, $scheduled_jobs);
     $this->assertFalse(isset($scheduled_jobs[0]['foo']), 'foo property should not be present in the scheduled job');
-  }
-
-  function xxxtest_job_args_sanitation() {
-    $jobs_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
-      $jobs_done = array_merge($jobs_done, $jobs);
-      \update_option(OPTION_JOBS_DONE, []);
-      return $jobs;
-    });
-    $uuids = [];
-
-    // \rest_validate_value_from_schema(
-    //   // @TODO: add schema validation using a wp filter 
-    // );
-
-    \update_option(OPTION_JOBS_SCHEDULED, [
-      [
-        'id' => $uuids[]=\wp_generate_uuid4(),
-        'type' => 'set_option',
-        'args' => [
-          'name' => 'foo',
-          'value'=> 'bar'
-        ]
-      ]
-    ]);
-
-    \do_action(CRON_JOB_HOOK);
-    $this->assertEqualsCanonicalizing(
-      [
-        [
-          'id' => $uuids[0],
-          'success' => true,
-        ],
-      ], 
-      $jobs_done
-    );
   }
 }

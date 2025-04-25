@@ -11,18 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 \add_filter( CRON_JOB_HOOK . '_install_plugin', function(array $payload) : array {
   $args = $payload['args'];
   
-  if( !isset($args['slug']) && !isset($args['url'])) {
-    return _create_job_error(
-      sprintf(
-        '%s : job "%s" requires "slug" and "url" in args. payload was %s',
-        CRON_JOB_HOOK,
-        $payload['type'],
-        \wp_json_encode($payload)
-      ),
-      $payload
-    );
-  }
-  
   $slug = $args['slug'];
   $force = $args['force'] ?? false;
   $url = $args['url'] ?? "https://downloads.wordpress.org/plugin/$slug.zip";

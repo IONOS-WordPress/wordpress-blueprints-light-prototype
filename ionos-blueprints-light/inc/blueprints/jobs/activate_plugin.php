@@ -11,18 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 \add_filter( CRON_JOB_HOOK . '_activate_plugin', function(array $payload) : array {
   $args = $payload['args'];
   
-  if( !isset($args['slug'])) {
-    return _create_job_error(
-      sprintf(
-        '%s : job "%s" requires "slug" in args. payload was %s',
-        CRON_JOB_HOOK,
-        $payload['type'],
-        \wp_json_encode($payload)
-      ),
-      $payload
-    );
-  }
-  
   $slug = $args['slug'];
   $force = $args['force'] ?? false;
 

@@ -37,18 +37,6 @@ class JobTest extends \WP_UnitTestCase {
     \add_filter( CRON_JOB_HOOK . '_' . self::CUSTOM_JOB_TYPE, function(array $payload) : array {
       $args = $payload['args'];
       
-      if( !isset($args['option']) || !isset($args['value'])) {
-        return _create_job_error(
-          sprintf(
-            '%s : job "%s" requires "option" and "value" in args. payload was %s',
-            CRON_JOB_HOOK,
-            $payload['type'],
-            \wp_json_encode($payload)
-          ),
-          $payload
-        );
-      }
-
       $option_name = $args['option'];
       $value = $args['value'];
       
