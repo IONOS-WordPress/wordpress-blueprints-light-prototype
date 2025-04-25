@@ -93,7 +93,7 @@ class JobTest extends \WP_UnitTestCase {
     $this->assertEmpty(\get_option(OPTION_JOBS_SCHEDULED, []), 'jobs should be empty');
 
     \update_option(OPTION_JOBS_DONE, []);
-    $this->assertEqualsCanonicalizing([], \get_option(OPTION_JOBS_DONE, []));
+    $this->assertEquals([], \get_option(OPTION_JOBS_DONE, []));
 
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
@@ -167,7 +167,7 @@ class JobTest extends \WP_UnitTestCase {
     ]);
     \do_action(CRON_JOB_HOOK);
 
-    $this->assertEqualsCanonicalizing(
+    $this->assertEquals(
       [
         [
           'success' => true,
@@ -184,103 +184,6 @@ class JobTest extends \WP_UnitTestCase {
           'value' => 13,
           'id' => $uuids[2],
         ]
-      ], 
-      $jobs_done
-    );
-  }
-
-  /*
-    test partial job execution
-
-    using a custom sleep job we force that only the first job  of 2 enqueued jobs is executed at first run og the cron job
-    at the second run the second job the rest of jobs qill get executed
-  */
-  function test_jobs_partial_done() {
-    $SLEEP_JOB_TYPE = 'sleep';
-    \add_filter( CRON_JOB_HOOK . '_' . $SLEEP_JOB_TYPE, function(array $payload) : array {
-      $args = $payload['args'];
-      
-      if( !isset($args['value'])) {
-        return _create_job_error(
-          sprintf(
-            '%s : job "%s" requires "value" in args. payload was %s',
-            CRON_JOB_HOOK,
-            $payload['type'],
-            \wp_json_encode($payload)
-          ),
-          $payload
-        );
-      }
-
-      $value = $args['value'];
-      
-      sleep($value);
-
-      return [
-        'value' => $value,
-      ];
-    });
-    $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
-
-    $jobs_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
-      $jobs_done = array_merge($jobs_done, $jobs);
-      \update_option(OPTION_JOBS_DONE, []);
-      return $jobs;
-    });
-
-    // force that our whole jobs cannot be executed within the allowed time frame
-    define('CRON_JOB_MAX_EXECUTION_TIME', 1);
-    $uuids = [];
-    \update_option(OPTION_JOBS_SCHEDULED, [
-      [
-        'id' => $uuids[]=\wp_generate_uuid4(),
-        'type' => $SLEEP_JOB_TYPE,
-        'args' => [
-          'value'=> 2
-        ]
-      ],
-      [
-        'id' => $uuids[]=\wp_generate_uuid4(),
-        'type' => 'set_option',
-        'args' => [
-          'name' => 'foo',
-          'value'=> 'bar'
-        ]
-      ]
-    ]);
-
-    // execute cron job the first time
-    \do_action(CRON_JOB_HOOK);
-    $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
-
-    // ensure only first job was executed
-    $this->assertEqualsCanonicalizing(
-      [
-        [
-          'id' => $uuids[0],
-          'value' => 2,
-        ],
-      ], 
-      $jobs_done
-    );
-
-    // execute cron job the second time
-    \do_action(CRON_JOB_HOOK);
-
-    // ensure rest of jobs was executed
-    $this->assertEquals( 'bar', \get_option('foo'), 'option foo should be set to "bar"');
-
-    $this->assertEqualsCanonicalizing(
-      [
-        [
-          'id' => $uuids[0],
-          'value' => 2,
-        ],
-        [
-          'id' => $uuids[1],
-          'success' => true,
-        ],
       ], 
       $jobs_done
     );
@@ -335,7 +238,7 @@ class JobTest extends \WP_UnitTestCase {
     \do_action(CRON_JOB_HOOK);
     $this->assertEquals('maybe', \get_option('foo'), 'option "foo" is set to "maybe"');
 
-    $this->assertEqualsCanonicalizing(
+    $this->assertEquals(
       [
         [
           'success' => true,
@@ -393,7 +296,7 @@ class JobTest extends \WP_UnitTestCase {
       ],
     ]);
     \do_action(CRON_JOB_HOOK);
-    $this->assertEqualsCanonicalizing(
+    $this->assertEquals(
       [
         [
           'success' => true,
@@ -430,7 +333,7 @@ class JobTest extends \WP_UnitTestCase {
     $this->assertCount(2, $jobs_done, '2 jobs done');
     $this->assertArrayHasKey('error', $jobs_done[0], 'install plugin "hello-dolly" should have an error');
    
-    $this->assertEqualsCanonicalizing(
+    $this->assertEquals(
       [
         'success' => true,
         'id' => $uuids[1],
@@ -455,7 +358,7 @@ class JobTest extends \WP_UnitTestCase {
     ]);
     \do_action(CRON_JOB_HOOK);
 
-    $this->assertEqualsCanonicalizing(
+    $this->assertEquals(
       [
         [
           'success' => true,
@@ -510,7 +413,7 @@ class JobTest extends \WP_UnitTestCase {
 
     \do_action(CRON_JOB_HOOK);
 
-    $this->assertEqualsCanonicalizing(
+    $this->assertEquals(
       [
         [
           'success' => true,
@@ -525,6 +428,105 @@ class JobTest extends \WP_UnitTestCase {
           'id' => $uuids[2],
         ]
       ], 
+      $jobs_done
+    );
+  }
+
+  /*
+   * test partial job execution
+   * using a custom sleep job we force that only the first job  of 2 enqueued jobs is executed at first run og the cron job
+   * at the second run the second job the rest of jobs qill get executed
+   * 
+   * this testcase should be called as last one since it modifies the cron execution time for all follow up tests 
+  */
+  function test_jobs_partial_done() {
+    $SLEEP_JOB_TYPE = 'sleep';
+    \add_filter( CRON_JOB_HOOK . '_' . $SLEEP_JOB_TYPE, function(array $payload) : array {
+      $args = $payload['args'];
+      
+      if( !isset($args['value'])) {
+        return _create_job_error(
+          sprintf(
+            '%s : job "%s" requires "value" in args. payload was %s',
+            CRON_JOB_HOOK,
+            $payload['type'],
+            \wp_json_encode($payload)
+          ),
+          $payload
+        );
+      }
+
+      $value = $args['value'];
+      
+      sleep($value);
+
+      return [
+        'value' => $value,
+      ];
+    });
+    $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
+
+    $jobs_done = [];
+    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
+      $jobs_done = array_merge($jobs_done, $jobs);
+      \update_option(OPTION_JOBS_DONE, []);
+      return $jobs;
+    });
+
+    // setting CRON_JOB_MAX_EXECUTION_TIME to 0 means 
+    // skip the execution time check and execute only one job per cron call 
+    define('CRON_JOB_MAX_EXECUTION_TIME', 0);
+    $uuids = [];
+    \update_option(OPTION_JOBS_SCHEDULED, [
+      [
+        'id' => $uuids[]=\wp_generate_uuid4(),
+        'type' => $SLEEP_JOB_TYPE,
+        'args' => [
+          'value'=> 2
+        ]
+      ],
+      [
+        'id' => $uuids[]=\wp_generate_uuid4(),
+        'type' => 'set_option',
+        'args' => [
+          'name' => 'foo',
+          'value'=> 'bar'
+        ]
+      ]
+    ]);
+
+    // execute cron job the first time
+    \do_action(CRON_JOB_HOOK);
+    $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
+
+    // ensure only first job was executed
+    $this->assertEquals(
+      [
+        [
+          'id' => $uuids[0],
+          'value' => 2,
+        ],
+      ], 
+      $jobs_done
+    );
+
+    // execute cron job the second time
+    \do_action(CRON_JOB_HOOK);
+
+    // ensure rest of jobs was executed
+    $this->assertEquals( 'bar', \get_option('foo'), 'option foo should be set to "bar"');
+
+    $this->assertEquals(
+      [
+        [
+          'id' => $uuids[0],
+          'value' => 2,
+        ],
+        [
+          'id' => $uuids[1],
+          'success' => true,
+        ],
+      ],
       $jobs_done
     );
   }

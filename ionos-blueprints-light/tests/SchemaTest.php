@@ -87,7 +87,7 @@ class SchemaTest extends \WP_UnitTestCase {
 
     $result = enqueue_jobs( [$JOB]);
     $this->assertTrue($result, 'job should be valid' );
-    $this->assertEqualsCanonicalizing([$JOB], \get_option(OPTION_JOBS_SCHEDULED));
+    $this->assertEquals([$JOB], \get_option(OPTION_JOBS_SCHEDULED));
   }  
 
   function test_manual_job_registration() {

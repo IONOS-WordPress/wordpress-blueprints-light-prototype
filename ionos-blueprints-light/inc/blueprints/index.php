@@ -87,6 +87,18 @@ if ( ! defined( 'ABSPATH' ) ) {
   die();
 }
 
+/**
+ * this is the time limit for each cron job call
+ * by default 10 seconds will be used for each cron job call
+ * 
+ * You can customize the maximum execution time for each cron job call by defining a constant 
+ * 'CRON_JOB_MAX_EXECUTION_TIME'. 
+ * 
+ * A value of 0 means execute only one job per cron call.
+ * A value of -1 means no limit on execution time.
+ *
+ * @return  int max_execution_time in seconds per cron call
+ */
 function _get_max_execution_time() {
   if(defined('CRON_JOB_MAX_EXECUTION_TIME')) {
     return constant('CRON_JOB_MAX_EXECUTION_TIME');
@@ -234,7 +246,14 @@ function enqueue_jobs(array $jobs) : bool|\WP_Error {
       $jobs_done[] = $result;
       \update_option(OPTION_JOBS_DONE, $jobs_done);
 
-      if (time() - $current_time > _get_max_execution_time()) {
+      $max_execution_time = _get_max_execution_time();
+      if($max_execution_time === 0) {
+        // abort after one job
+        break;
+      } else if($max_execution_time === -1) {
+        // no limit
+        continue;
+      } else if (time() - $current_time > $max_execution_time) {
         // if there are still jobs scheduled, reschedule the cron job
         // to run again in 10 seconds
         if(count($jobs_scheduled) > 0) {
