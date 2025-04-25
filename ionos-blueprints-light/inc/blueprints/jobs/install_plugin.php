@@ -35,8 +35,8 @@ if ( ! defined( 'ABSPATH' ) ) {
         '%s : job "%s" failed to download plugin "%s". http_status=%s',
         CRON_JOB_HOOK,
         $payload['type'],
+        $slug,
         \wp_remote_retrieve_response_code($response),
-        $slug
       ),
       $payload
     );
@@ -64,7 +64,7 @@ if ( ! defined( 'ABSPATH' ) ) {
   if (!file_put_contents($temp_file, \wp_remote_retrieve_body($response))) {
     return _create_job_error(
       sprintf(
-        '%s : job "%s" failed to write plugin "%s" to temporary file.',
+        '%s : job "%s" failed to write downloaded plugin "%s" to temporary file.',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug
@@ -100,11 +100,11 @@ if ( ! defined( 'ABSPATH' ) ) {
   if($success !== true) {
     return _create_job_error(
       sprintf(
-        '%s : job "%s" failed to unzip plugin "%s". ',
+        '%s : %sjob "%s" f%sailed to unzip plugin "%s". %s',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug,
-      \is_wp_error($success) ? $success->get_error_message() : 'unknown error',
+        \is_wp_error($success) ? $success->get_error_message() : 'unknown error',
       ),
       $payload
     );
