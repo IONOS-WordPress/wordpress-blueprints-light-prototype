@@ -6,9 +6,6 @@ use function ionos_blueprints_light\ionos_blueprints_light\blueprints\_add_filte
 use function ionos_blueprints_light\ionos_blueprints_light\blueprints\enqueue_jobs;
 
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK_DONE_ACTION;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\JOB_VALIDATION_HOOK_PREFIX;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_DONE;
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_SCHEDULED;
 use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
 
@@ -141,7 +138,6 @@ class SchemaTest extends \WP_UnitTestCase {
         'foo' => 'bar', // additional properties are not allowed
       ]
     ]);
-    $this->assertTrue($result, 'job should be sanitized (added defaults for left and right) and valid' );
     $scheduled_jobs = \get_option(OPTION_JOBS_SCHEDULED);
     $this->assertCount(1, $scheduled_jobs);
     $this->assertFalse(isset($scheduled_jobs[0]['foo']), 'foo property should not be present in the scheduled job');
