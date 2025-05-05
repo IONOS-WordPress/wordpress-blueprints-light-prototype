@@ -1,0 +1,71 @@
+<?php
+
+namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
+
+use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
+use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_DONE;
+use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_SCHEDULED;
+use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
+
+require_once __DIR__ . '/../blueprints-light.php';
+
+class DeletePluginJobTest extends \WP_UnitTestCase {
+
+  public function setUp(): void {
+    parent::set_up();
+
+    \activate_plugin( SLUG );
+  }
+
+  public function tearDown(): void {
+    parent::tear_down();
+
+    \deactivate_plugins(SLUG);
+  }
+
+  function test_delete_plugin_job() {
+    $TEST_PLUGIN_SLUG = 'blueprint-test-plugin';
+
+    $code = <<<EOT
+<?php
+/*
+ * Plugin Name: {$TEST_PLUGIN_SLUG}
+*/
+
+error_log("Hello from {$TEST_PLUGIN_SLUG} plugin");
+EOT;
+
+    file_put_contents(WP_PLUGIN_DIR . "/{$TEST_PLUGIN_SLUG}.php", $code);
+    
+    \wp_cache_delete('plugins', 'plugins');
+
+    $TEST_PLUGIN_SLUG .= '.php';
+    \activate_plugin( $TEST_PLUGIN_SLUG );
+
+    $this->assertTrue( \is_plugin_active( $TEST_PLUGIN_SLUG ) );
+
+    \update_option(OPTION_JOBS_SCHEDULED, [
+      [
+        'id' => $uuids[]=\wp_generate_uuid4(),
+        'type' => 'delete_plugin',
+        'args' => [
+          'slug'=> $TEST_PLUGIN_SLUG,
+          'force' => true,
+        ]
+      ],
+    ]);
+
+    // execute cron job the first time
+    \do_action(CRON_JOB_HOOK);
+
+    $jobs_done = \get_option(OPTION_JOBS_DONE);
+
+    // verify option value matches preset value
+    $this->assertCount(1, $jobs_done);
+    $this->assertTrue($jobs_done[0]['success'], 'job should be successful');
+    
+    $this->assertFalse(  \is_plugin_active( $TEST_PLUGIN_SLUG ), 'plugin should not be active' );
+    $this->assertFileDoesNotExist( WP_PLUGIN_DIR . "/{$TEST_PLUGIN_SLUG}", 'plugin should be deleted' );
+
+  }
+}

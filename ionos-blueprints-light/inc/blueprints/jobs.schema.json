@@ -10,6 +10,9 @@
         "$ref": "jobs/install_plugin.schema.json"
       },
       {
+        "$ref": "jobs/delete_plugin.schema.json"
+      },
+      {
         "$ref": "jobs/activate_plugin.schema.json"
       },
       {

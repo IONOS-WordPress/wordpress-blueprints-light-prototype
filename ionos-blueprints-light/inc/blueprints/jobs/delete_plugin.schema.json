@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "description": "Structure of the delete_plugin job payload.",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique id of this job.",
+      "format": "uuid"
+    },
+    "type": {
+      "type": "string",
+      "description": "The type of this job.",
+      "const": "activate_plugin"
+    },
+    "args" : {
+      "type": "object",
+      "properties" : {
+        "slug": {
+          "type": "string",
+          "description": "The slug of the wordpress plugin to install or an https url to download the plugin from."
+        },
+        "force": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the plugin will not throw an error if the plugin was not existing or was active"
+        }
+      },
+      "required": ["slug"]
+    }
+  },
+  "required": ["args", "type", "id"]
+}
