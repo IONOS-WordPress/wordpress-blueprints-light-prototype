@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "description": "This schema defines the structure of the activate_plugin job payload.",
+  "description": "This schema defines the structure of the deactivate_plugin job payload.",
   "properties": {
     "id": {
       "type": "string",
@@ -11,19 +11,19 @@
     "type": {
       "type": "string",
       "description": "The type of this job.",
-      "const": "activate_plugin"
+      "const": "deactivate_plugin"
     },
     "args" : {
       "type": "object",
       "properties" : {
         "slug": {
           "type": "string",
-          "description": "The slug of the wordpress plugin to install or an https url to download the plugin from."
+          "description": "The slug of the wordpress plugin to deactivate."
         },
-        "force": {
+        "silent": {
           "type": "boolean",
           "default": false,
-          "description": "If true, the plugin will not throw an error if the plugin was already activated or is not installed"
+          "description": "Prevent calling deactivation hooks. Default false."
         }
       },
       "required": ["slug"]
