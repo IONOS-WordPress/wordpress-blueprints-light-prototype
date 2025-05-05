@@ -3,7 +3,6 @@
 namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
 
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_DONE;
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_SCHEDULED;
 use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
 
@@ -23,7 +22,7 @@ class DeactivatePluginJobTest extends \WP_UnitTestCase {
     \deactivate_plugins(SLUG);
   }
 
-  function test_deactivate_job() {
+  function test_deactivate_plugin_job() {
     \update_option(OPTION_JOBS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),

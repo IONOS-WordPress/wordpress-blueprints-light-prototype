@@ -4,6 +4,9 @@
   "items": {
     "oneOf": [
       {
+        "$ref": "jobs/deactivate_plugin.schema.json"
+      },
+      {
         "$ref": "jobs/install_plugin.schema.json"
       },
       {
@@ -11,6 +14,9 @@
       },
       {
         "$ref": "jobs/set_option.schema.json"
+      },
+      {
+        "$ref": "jobs/delete_option.schema.json"
       }
    ]
   }
