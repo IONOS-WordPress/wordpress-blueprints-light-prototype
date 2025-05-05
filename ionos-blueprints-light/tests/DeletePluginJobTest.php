@@ -64,7 +64,7 @@ EOT;
     $this->assertCount(1, $jobs_done);
     $this->assertTrue($jobs_done[0]['success'], 'job should be successful');
     
-    $this->assertFalse(  \is_plugin_active( $TEST_PLUGIN_SLUG ), 'plugin should not be active' );
+    $this->assertFalse( \is_plugin_active( $TEST_PLUGIN_SLUG ), 'plugin should not be active' );
     $this->assertFileDoesNotExist( WP_PLUGIN_DIR . "/{$TEST_PLUGIN_SLUG}", 'plugin should be deleted' );
 
   }
