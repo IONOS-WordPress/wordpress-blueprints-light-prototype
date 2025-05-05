@@ -17,6 +17,9 @@
       },
       {
         "$ref": "jobs/delete_option.schema.json"
+      },
+      {
+        "$ref": "jobs/get_option.schema.json"
       }
    ]
   }
