@@ -2,27 +2,20 @@
   "core": null,
   "phpVersion": "8.3",
   "plugins": [
-    "./ionos-blueprints-light",
-    "https://downloads.wordpress.org/plugin/wp-crontrol.1.18.0.zip"
+    "./ionos-blueprints-light"
   ],
-  "themes": [
-    "https://downloads.wordpress.org/theme/twentytwentyfive.zip"
-  ],
-  "env": {
-    "development": {
-      "phpmyadminPort": 9000
-    }
-  },
   "config": {
     "SCRIPT_DEBUG": true,
     "WP_DEBUG": true,
     "WP_DEBUG_DISPLAY": true,
     "WP_DEBUG_LOG": true,
     "SAVEQUERIES": true,
-    
     "WP_DEVELOPMENT_MODE": "all"
   },
   "lifecycleScripts": {
     "afterStart": "./wp-env-after-start.sh"
+  },
+  "mappings": {
+    "standalone": "./standalone"
   }
 }

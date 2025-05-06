@@ -4,6 +4,9 @@
 #   pnpm test 
 #   or pnpm test <phpunit arguments...> like pnpm test -- '--filter test_complex_example'
 
+# set -eu pipefail
+set -eo pipefail
+
 exec pnpm run wp-env run tests-cli \
   --env-cwd=wp-content/plugins/ionos-blueprints-light \
   bash -c \
