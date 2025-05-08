@@ -20,7 +20,10 @@ The goal of this prototype is finding a cheap way to provision
 
 ## Demo
 
-![](blueprints-demo.webm)
+![Video](blueprints-demo.webm)
+
+![Video](./blueprints-demo.webm)
+
 
 ## Prerequisities
 
