@@ -1,28 +1,28 @@
 {
   "type": "array",
-  "description": "This schema defines the jobs data structure.",
+  "description": "This schema defines the tasks data structure.",
   "items": {
     "oneOf": [
       {
-        "$ref": "jobs/deactivate_plugin.schema.json"
+        "$ref": "tasks/deactivate_plugin.schema.json"
       },
       {
-        "$ref": "jobs/install_plugin.schema.json"
+        "$ref": "tasks/install_plugin.schema.json"
       },
       {
-        "$ref": "jobs/delete_plugin.schema.json"
+        "$ref": "tasks/delete_plugin.schema.json"
       },
       {
-        "$ref": "jobs/activate_plugin.schema.json"
+        "$ref": "tasks/activate_plugin.schema.json"
       },
       {
-        "$ref": "jobs/set_option.schema.json"
+        "$ref": "tasks/set_option.schema.json"
       },
       {
-        "$ref": "jobs/delete_option.schema.json"
+        "$ref": "tasks/delete_option.schema.json"
       },
       {
-        "$ref": "jobs/get_option.schema.json"
+        "$ref": "tasks/get_option.schema.json"
       }
    ]
   }

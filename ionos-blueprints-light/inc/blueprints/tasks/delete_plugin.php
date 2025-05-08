@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     if($force) {
       \deactivate_plugins($slug);  
     } else {
-      return _create_job_error(
+      return _create_task_error(
         sprintf(
-          '%s : job "%s" failed to delete plugin "%s". Plugin is still active.',
+          '%s : task "%s" failed to delete plugin "%s". Plugin is still active.',
           CRON_JOB_HOOK,
           $payload['type'],
           $slug,
@@ -33,9 +33,9 @@ if ( ! defined( 'ABSPATH' ) ) {
   $success = \delete_plugins([ $slug ]);
 
   if($success !== true && $force===false) {
-    return _create_job_error(
+    return _create_task_error(
       sprintf(
-        '%s : job "%s" failed to delete plugin "%s". ',
+        '%s : task "%s" failed to delete plugin "%s". ',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug,

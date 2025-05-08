@@ -4,14 +4,14 @@
 
 # reset instance
 
-pnpm -s run wp-env run cli wp --quiet option delete ionos_blueprints_jobs ionos_blueprints_jobs_done foo 2>/dev/null
+pnpm -s run wp-env run cli wp --quiet option delete ionos_blueprints_tasks ionos_blueprints_tasks_done foo 2>/dev/null
 pnpm -s run wp-env run cli wp --quiet plugin deactivate hello-dolly 2>/dev/null
 pnpm -s run wp-env run cli wp --quiet plugin delete hello-dolly 2>/dev/null
 
-# inject new jobs
+# inject new tasks
 
-jobs="$(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]')"
-jobs=$(jq '. += [
+tasks="$(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_tasks --format=json 2>/dev/null || echo '[]')"
+tasks=$(jq '. += [
     { 
       id: "5fd8850f-ddb6-42f4-a63e-8eab98ea7f9b",
       type: "install_plugin",
@@ -35,23 +35,23 @@ jobs=$(jq '. += [
         "slug": "hello-dolly/hello.php"
       }
     }
-]' <<< "$jobs")
-pnpm -s run wp-env run cli wp --quiet option set ionos_blueprints_jobs "$jobs" --format=json
+]' <<< "$tasks")
+pnpm -s run wp-env run cli wp --quiet option set ionos_blueprints_tasks "$tasks" --format=json
 
-# reset jobs_done
-pnpm -s run wp-env run cli wp --quiet option set ionos_blueprints_jobs_done "[]" --format=json
+# reset tasks_done
+pnpm -s run wp-env run cli wp --quiet option set ionos_blueprints_tasks_done "[]" --format=json
 
-# check jobs done 
+# check tasks done 
 
-echo $(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs_done --format=json 2>/dev/null || echo '[]') | jq .
+echo $(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_tasks_done --format=json 2>/dev/null || echo '[]') | jq .
 
-# check enqueued jobs
+# check enqueued tasks
 
-echo $(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_jobs --format=json 2>/dev/null || echo '[]') | jq .
+echo $(pnpm -s run wp-env run cli wp --quiet option get ionos_blueprints_tasks --format=json 2>/dev/null || echo '[]') | jq .
 
-# trigger processing jobs
+# trigger processing tasks
 
-pnpm -s run wp-env run cli wp --quiet cron event run ionos_blueprints_cron_job
+pnpm -s run wp-env run cli wp --quiet cron event run ionos_blueprints_cron_task
 
 # list active plugins
 
@@ -65,7 +65,7 @@ pnpm -s run wp-env run cli wp --quiet option list --search='ionos_blueprints*' 2
 
 pnpm -s run wp-env run cli wp --quiet option list --search='foo' 2>/dev/null
 
-# list cron jobs
+# list cron tasks
 
 pnpm run wp-env run cli wp --quiet cron event list
 
@@ -75,26 +75,26 @@ namespace ionos_blueprints_light\ionos_blueprints_light\blueprints;
 
 use const ionos_blueprints_light\ionos_blueprints_light\FILE;
 
-const OPTION_JOBS_SCHEDULED = 'ionos_blueprints_jobs';
-const OPTION_JOBS_DONE = 'ionos_blueprints_jobs_done';
+const OPTION_TASKS_SCHEDULED = 'ionos_blueprints_tasks';
+const OPTION_TASKS_DONE = 'ionos_blueprints_tasks_done';
 
-const JOB_VALIDATION_HOOK_PREFIX = 'ionos_blueprints_job_validation_';
-const CRON_JOB_HOOK = 'ionos_blueprints_cron_job';
-const CRON_JOB_HOOK_DONE_ACTION = OPTION_JOBS_DONE . '_action';
-const CRON_JOB_RECURRENCE = 'ionos_blueprints_cron_job_recurrence';
+const JOB_VALIDATION_HOOK_PREFIX = 'ionos_blueprints_task_validation_';
+const CRON_JOB_HOOK = 'ionos_blueprints_cron_task';
+const CRON_JOB_HOOK_DONE_ACTION = OPTION_TASKS_DONE . '_action';
+const CRON_JOB_RECURRENCE = 'ionos_blueprints_cron_task_recurrence';
 
 if ( ! defined( 'ABSPATH' ) ) {
   die();
 }
 
 /**
- * this is the time limit for each cron job call
- * by default 10 seconds will be used for each cron job call
+ * this is the time limit for each cron task call
+ * by default 10 seconds will be used for each cron task call
  * 
- * You can customize the maximum execution time for each cron job call by defining a constant 
+ * You can customize the maximum execution time for each cron task call by defining a constant 
  * 'CRON_JOB_MAX_EXECUTION_TIME'. 
  * 
- * A value of 0 means execute only one job per cron call.
+ * A value of 0 means execute only one task per cron call.
  * A value of -1 means no limit on execution time.
  *
  * @return  int max_execution_time in seconds per cron call
@@ -107,7 +107,7 @@ function _get_max_execution_time() {
   }
 }
 
-function _cron_job_next_tick_delay() {
+function _cron_task_next_tick_delay() {
   if(defined('CRON_JOB_NEXT_TICK_DELAY')) {
     return constant('CRON_JOB_NEXT_TICK_DELAY');
   } else {
@@ -117,19 +117,19 @@ function _cron_job_next_tick_delay() {
 }
 
 /**
- * cleanup persisted options and cron jobs
+ * cleanup persisted options and cron tasks
  */ 
 \register_deactivation_hook(
   file: FILE, 
   callback: function () {
     \wp_clear_scheduled_hook(CRON_JOB_HOOK);
-    \delete_option(OPTION_JOBS_SCHEDULED);
-    \delete_option(OPTION_JOBS_DONE);
+    \delete_option(OPTION_TASKS_SCHEDULED);
+    \delete_option(OPTION_TASKS_DONE);
   }
 );
 
 /**
- * register cron job
+ * register cron task
  */
 \add_action(
   hook_name: 'init', 
@@ -145,73 +145,73 @@ function _cron_job_next_tick_delay() {
 );
 
 /**
- * validate and sanitize jobs according to their json schema definition
+ * validate and sanitize tasks according to their json schema definition
  */
 
-function enqueue_jobs(array $jobs) : bool|\WP_Error {
-  foreach ($jobs as $index => $job) {
-    if(!is_array($job)) {
+function enqueue_tasks(array $tasks) : bool|\WP_Error {
+  foreach ($tasks as $index => $task) {
+    if(!is_array($task)) {
       return new \WP_Error(
-        'invalid_job',
-        sprintf('job(=%s) is not an array', json_encode($job)),
-        $job,
+        'invalid_task',
+        sprintf('task(=%s) is not an array', json_encode($task)),
+        $task,
       );
     }
 
-    if(!isset($job['type'])) {
+    if(!isset($task['type'])) {
       return new \WP_Error(
-        'invalid_job_type',
-        'job has no "type" property',
-        $job,
+        'invalid_task_type',
+        'task has no "type" property',
+        $task,
       );
     }
 
-    $job_type = $job['type'];
+    $task_type = $task['type'];
 
-    if(!\has_filter(CRON_JOB_HOOK . '_' . $job_type)) {
+    if(!\has_filter(CRON_JOB_HOOK . '_' . $task_type)) {
       return new \WP_Error(
-        'invalid_job_type',
-        sprintf('job type "%s"(filter=%s) is unknown : No filter registered', $job_type, CRON_JOB_HOOK . '_' . $job_type),
-        $job,
+        'invalid_task_type',
+        sprintf('task type "%s"(filter=%s) is unknown : No filter registered', $task_type, CRON_JOB_HOOK . '_' . $task_type),
+        $task,
       );
     }
 
-    if(!\has_filter(JOB_VALIDATION_HOOK_PREFIX . $job_type)) {
+    if(!\has_filter(JOB_VALIDATION_HOOK_PREFIX . $task_type)) {
       error_log(sprintf(
-        'job(=%s) has no validation filter registered for type "%s"',
-        $job_type,
-        \wp_json_encode($job),
+        'task(=%s) has no validation filter registered for type "%s"',
+        $task_type,
+        \wp_json_encode($task),
       ));
       continue;
     }
 
     // validate filter against json schema
     $result = \apply_filters(
-      hook_name: JOB_VALIDATION_HOOK_PREFIX . $job_type,
-      value: $job
+      hook_name: JOB_VALIDATION_HOOK_PREFIX . $task_type,
+      value: $task
     );
 
     if(is_wp_error($result)) {
       return new  \WP_Error(
-        'invalid_job',
+        'invalid_task',
         sprintf(
-          'job(=%s) is not valid according to schema. %s',
-          \wp_json_encode($job),
+          'task(=%s) is not valid according to schema. %s',
+          \wp_json_encode($task),
           $result->get_error_message()
         ),
         [
-          'job' => $job,
+          'task' => $task,
           'error' => $result,
         ]
       );
     }
 
-    $jobs[$index] = $result;
+    $tasks[$index] = $result;
   }
 
-  // merge new jobs and already enqueued jobs
-  $jobs_scheduled = \get_option(OPTION_JOBS_SCHEDULED, []);
-  \update_option(OPTION_JOBS_SCHEDULED, array_merge($jobs_scheduled, $jobs));
+  // merge new tasks and already enqueued tasks
+  $tasks_scheduled = \get_option(OPTION_TASKS_SCHEDULED, []);
+  \update_option(OPTION_TASKS_SCHEDULED, array_merge($tasks_scheduled, $tasks));
 
   return true;
 }
@@ -230,35 +230,35 @@ function enqueue_jobs(array $jobs) : bool|\WP_Error {
 \add_action(
   hook_name: CRON_JOB_HOOK, 
   callback: function () : void {
-    $jobs_scheduled = _get_jobs();
-    $jobs_done = _get_jobs_done();
+    $tasks_scheduled = _get_tasks();
+    $tasks_done = _get_tasks_done();
 
     $current_time = time();
     
-    while(($job = array_shift($jobs_scheduled)) !== null) {
-      $result = _execute_job($job);
+    while(($task = array_shift($tasks_scheduled)) !== null) {
+      $result = _execute_task($task);
       if (isset($result['error'])) {
         error_log($result['error']);
       }
 
-      \update_option(OPTION_JOBS_SCHEDULED, $jobs_scheduled);
+      \update_option(OPTION_TASKS_SCHEDULED, $tasks_scheduled);
 
-      $jobs_done[] = $result;
-      \update_option(OPTION_JOBS_DONE, $jobs_done);
+      $tasks_done[] = $result;
+      \update_option(OPTION_TASKS_DONE, $tasks_done);
 
       $max_execution_time = _get_max_execution_time();
       if($max_execution_time === 0) {
-        // abort after one job
+        // abort after one task
         break;
       } else if($max_execution_time === -1) {
         // no limit
         continue;
       } else if (time() - $current_time > $max_execution_time) {
-        // if there are still jobs scheduled, reschedule the cron job
+        // if there are still tasks scheduled, reschedule the cron task
         // to run again in 10 seconds
-        if(count($jobs_scheduled) > 0) {
+        if(count($tasks_scheduled) > 0) {
           \wp_schedule_single_event(
-            timestamp: time() + _cron_job_next_tick_delay(), 
+            timestamp: time() + _cron_task_next_tick_delay(), 
             hook: CRON_JOB_HOOK
           );
         }
@@ -266,112 +266,112 @@ function enqueue_jobs(array $jobs) : bool|\WP_Error {
       }
     }
 
-    \do_action( CRON_JOB_HOOK_DONE_ACTION, $jobs_done);
+    \do_action( CRON_JOB_HOOK_DONE_ACTION, $tasks_done);
   }
 );
 
-\add_action( CRON_JOB_HOOK_DONE_ACTION, function(array $jobs_done) : void {
-  $jobs_done = _get_jobs_done();
+\add_action( CRON_JOB_HOOK_DONE_ACTION, function(array $tasks_done) : void {
+  $tasks_done = _get_tasks_done();
   
-  if (!empty($jobs_done)) {
-    // @FIXME: send proceeded job results back to hosting platform
+  if (!empty($tasks_done)) {
+    // @FIXME: send proceeded task results back to hosting platform
 
-    // reset jobs done
-    // \update_option(OPTION_JOBS_DONE, []);
+    // reset tasks done
+    // \update_option(OPTION_TASKS_DONE, []);
   }
 });
 
-function _create_job_error(string $message, array $job) : array {
+function _create_task_error(string $message, array $task) : array {
   return [
     'error' => $message,
-    'id' => $job['id'],
-    'args' => $job,
+    'id' => $task['id'],
+    'args' => $task,
   ];
 }
 
-function _execute_job(array $job) : array {
-  $HOOK_NAME = CRON_JOB_HOOK . '_' . $job['type'];
+function _execute_task(array $task) : array {
+  $HOOK_NAME = CRON_JOB_HOOK . '_' . $task['type'];
   if (!has_filter($HOOK_NAME)) {
-    return _create_job_error(
+    return _create_task_error(
       sprintf(
-        '%s : no filter registered for job "%s"(hook_name="%s"). payload was %s',
+        '%s : no filter registered for task "%s"(hook_name="%s"). payload was %s',
         CRON_JOB_HOOK,
-        $job['type'],
+        $task['type'],
         $HOOK_NAME,
-        \wp_json_encode($job)
+        \wp_json_encode($task)
       ),      
-      $job
+      $task
     );
   } else {
     $result = \apply_filters(
       hook_name: $HOOK_NAME,
-      value: $job
+      value: $task
     );
 
     if(!is_array($result)) {
-      $result = _create_job_error(
+      $result = _create_task_error(
         sprintf(
           '%s : filter "%s"(hook_name="%s") returned a non array result. result was %s',
           CRON_JOB_HOOK,
-          $job['type'],
+          $task['type'],
           $HOOK_NAME,
           \wp_json_encode($result)
         ),
-        $job
+        $task
       );
     }
   }
 
-  $result['id'] = $job['id'];
+  $result['id'] = $task['id'];
 
   return $result;
 }
 
-function _get_jobs() : array {
-  $jobs_scheduled = \get_option(OPTION_JOBS_SCHEDULED, []);
-  return $jobs_scheduled;
+function _get_tasks() : array {
+  $tasks_scheduled = \get_option(OPTION_TASKS_SCHEDULED, []);
+  return $tasks_scheduled;
 }
 
-function _get_jobs_done() : array {
-  $jobs_done = \get_option(OPTION_JOBS_DONE, []);
-  return $jobs_done;
+function _get_tasks_done() : array {
+  $tasks_done = \get_option(OPTION_TASKS_DONE, []);
+  return $tasks_done;
 }
 
-function _add_filter_job_validation(string $job_type, array $json_schema) : void {
+function _add_filter_task_validation(string $task_type, array $json_schema) : void {
   \add_filter(
-    hook_name: JOB_VALIDATION_HOOK_PREFIX . $job_type,
-    callback: function(array $job) use ($json_schema, $job_type) {
-      $job = \rest_sanitize_value_from_schema(
-        value: $job,
+    hook_name: JOB_VALIDATION_HOOK_PREFIX . $task_type,
+    callback: function(array $task) use ($json_schema, $task_type) {
+      $task = \rest_sanitize_value_from_schema(
+        value: $task,
         args: $json_schema,
-        param: $job_type
+        param: $task_type
       );
       $result = \rest_validate_value_from_schema(
-        value: $job,
+        value: $task,
         args: $json_schema,
-        param: $job_type
+        param: $task_type
       );
 
-      return \is_wp_error($result) ? $result : $job;
+      return \is_wp_error($result) ? $result : $task;
     },
   );
 }
 
 /**
- * loads job types (each in a separate php file) and registers the json schema for the job 
- * the json schema is later on used to validate the job arguments before job execution
+ * loads task types (each in a separate php file) and registers the json schema for the task 
+ * the json schema is later on used to validate the task arguments before task execution
  * 
- * @param $path to load job types
+ * @param $path to load task types
  */
-function _load_job_types(string $path) : void {
-  # load all job definitions
+function _load_task_types(string $path) : void {
+  # load all task definitions
   foreach (glob($path . '/*.php') as $file) {
     require_once $file;
     
     $schema_file = preg_replace('/\.php$/', '.schema.json', $file);
     if(!file_exists($schema_file)) {
       error_log(sprintf(
-        'Schema file "%s" not found for job "%s"',
+        'Schema file "%s" not found for task "%s"',
         $schema_file,
         $file
       ));
@@ -396,9 +396,9 @@ function _load_job_types(string $path) : void {
       continue;
     }
 
-    $job_type = basename($file, '.php');
-    _add_filter_job_validation($job_type, $json_schema);
+    $task_type = basename($file, '.php');
+    _add_filter_task_validation($task_type, $json_schema);
   }
 }
 
-_load_job_types(__DIR__ . '/jobs');
+_load_task_types(__DIR__ . '/tasks');

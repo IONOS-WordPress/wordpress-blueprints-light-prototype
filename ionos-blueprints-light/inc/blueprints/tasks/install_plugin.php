@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
   $response = \wp_remote_get($url);
 
   if (\wp_remote_retrieve_response_code($response) !== 200) {
-    return _create_job_error(
+    return _create_task_error(
       sprintf(
-        '%s : job "%s" failed to download plugin "%s". http_status=%s',
+        '%s : task "%s" failed to download plugin "%s". http_status=%s',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug,
@@ -38,9 +38,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
   $temp_file = \wp_tempnam($url);
   if (!$temp_file) {
-    return _create_job_error(
+    return _create_task_error(
       sprintf(
-        '%s : job "%s" failed to create temporary file for plugin "%s".',
+        '%s : task "%s" failed to create temporary file for plugin "%s".',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug
@@ -50,9 +50,9 @@ if ( ! defined( 'ABSPATH' ) ) {
   }
 
   if (!file_put_contents($temp_file, \wp_remote_retrieve_body($response))) {
-    return _create_job_error(
+    return _create_task_error(
       sprintf(
-        '%s : job "%s" failed to write downloaded plugin "%s" to temporary file.',
+        '%s : task "%s" failed to write downloaded plugin "%s" to temporary file.',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug
@@ -69,9 +69,9 @@ if ( ! defined( 'ABSPATH' ) ) {
         \delete_plugins([$plugin_file]);
         break;
       } else{
-        return _create_job_error(
+        return _create_task_error(
           sprintf(
-            '%s : job "%s" aborted because plugin "%s" is already installed.',
+            '%s : task "%s" aborted because plugin "%s" is already installed.',
             CRON_JOB_HOOK,
             $payload['type'],
             $slug
@@ -86,9 +86,9 @@ if ( ! defined( 'ABSPATH' ) ) {
   @unlink($temp_file); // Clean up the temporary file
 
   if($success !== true) {
-    return _create_job_error(
+    return _create_task_error(
       sprintf(
-        '%s : %sjob "%s" f%sailed to unzip plugin "%s". %s',
+        '%s : %stask "%s" f%sailed to unzip plugin "%s". %s',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug,

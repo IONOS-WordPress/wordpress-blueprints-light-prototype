@@ -2,16 +2,16 @@
 
 namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
 
-use function ionos_blueprints_light\ionos_blueprints_light\blueprints\_create_job_error;
+use function ionos_blueprints_light\ionos_blueprints_light\blueprints\_create_task_error;
 
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK_DONE_ACTION;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_DONE;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_SCHEDULED;
+use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_TASKS_DONE;
+use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_TASKS_SCHEDULED;
 use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
 
 require_once __DIR__ . '/../blueprints-light.php';
-class JobTest extends \WP_UnitTestCase {
+class TaskTest extends \WP_UnitTestCase {
 
   const CUSTOM_JOB_TYPE = 'add_to_option';
 
@@ -20,7 +20,7 @@ class JobTest extends \WP_UnitTestCase {
 
     \activate_plugin( SLUG );
 
-    static::_register_custom_job_type();
+    static::_register_custom_task_type();
   }
 
   public function tearDown(): void {
@@ -29,7 +29,7 @@ class JobTest extends \WP_UnitTestCase {
     \deactivate_plugins(SLUG);
   }
 
-  private function _register_custom_job_type() {
+  private function _register_custom_task_type() {
     if(\has_filter(CRON_JOB_HOOK . '_' . self::CUSTOM_JOB_TYPE)) {
       return;
     }
@@ -52,13 +52,13 @@ class JobTest extends \WP_UnitTestCase {
   }
 
   /*
-    test custom job type for adding a value to an option
+    test custom task type for adding a value to an option
   */
-	function test_custom_job() {
-    $jobs = \get_option(OPTION_JOBS_SCHEDULED, []);
-    $this->assertEmpty($jobs, 'No jobs should be scheduled');
+	function test_custom_task() {
+    $tasks = \get_option(OPTION_TASKS_SCHEDULED, []);
+    $this->assertEmpty($tasks, 'No tasks should be scheduled');
     
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => \wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
@@ -68,15 +68,15 @@ class JobTest extends \WP_UnitTestCase {
         ]
       ]
     ]);
-    $this->assertCount(1, \get_option(OPTION_JOBS_SCHEDULED), 'A single job is scheduled');
+    $this->assertCount(1, \get_option(OPTION_TASKS_SCHEDULED), 'A single task is scheduled');
     $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
 
     \do_action(CRON_JOB_HOOK);
     $this->assertSame( \get_option('foo'), 10, 'option "foo" should be set to 10 after action is triggered');
     
-    $this->assertEmpty(\get_option(OPTION_JOBS_SCHEDULED, []), 'jobs should be empty');
+    $this->assertEmpty(\get_option(OPTION_TASKS_SCHEDULED, []), 'tasks should be empty');
     
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => \wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
@@ -86,16 +86,16 @@ class JobTest extends \WP_UnitTestCase {
         ]
       ]
     ]);
-    $this->assertCount(1, \get_option(OPTION_JOBS_SCHEDULED), 'A single job is scheduled');
+    $this->assertCount(1, \get_option(OPTION_TASKS_SCHEDULED), 'A single task is scheduled');
 
     \do_action(CRON_JOB_HOOK);
     $this->assertSame( \get_option('foo'), 20, 'option "foo" should be set to 20 after action is triggered');
-    $this->assertEmpty(\get_option(OPTION_JOBS_SCHEDULED, []), 'jobs should be empty');
+    $this->assertEmpty(\get_option(OPTION_TASKS_SCHEDULED, []), 'tasks should be empty');
 
-    \update_option(OPTION_JOBS_DONE, []);
-    $this->assertEquals([], \get_option(OPTION_JOBS_DONE, []));
+    \update_option(OPTION_TASKS_DONE, []);
+    $this->assertEquals([], \get_option(OPTION_TASKS_DONE, []));
 
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => \wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
@@ -113,28 +113,28 @@ class JobTest extends \WP_UnitTestCase {
           ]
         ]
     ]);
-    $this->assertCount(2, \get_option(OPTION_JOBS_SCHEDULED), '2 jobs are scheduled');
+    $this->assertCount(2, \get_option(OPTION_TASKS_SCHEDULED), '2 tasks are scheduled');
     \do_action(CRON_JOB_HOOK);
     $this->assertSame( \get_option('foo'), 70, 'option "foo" should be set to 20 after action is triggered');
-    $this->assertEmpty(\get_option(OPTION_JOBS_SCHEDULED, []), 'jobs should be empty');
+    $this->assertEmpty(\get_option(OPTION_TASKS_SCHEDULED, []), 'tasks should be empty');
 	}
 
   /*
-    test that enqueued jobs are executed
-      - job results is stored in the jobs_done option
-      - and that the jobs are removed from the jobs_scheduled option
+    test that enqueued tasks are executed
+      - task results is stored in the tasks_done option
+      - and that the tasks are removed from the tasks_scheduled option
   */
-  function test_jobs_done() {
-    $jobs_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
-      $jobs_done = array_merge($jobs_done, $jobs);
-      \update_option(OPTION_JOBS_DONE, []);
-      return $jobs;
+  function test_tasks_done() {
+    $tasks_done = [];
+    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+      $tasks_done = array_merge($tasks_done, $tasks);
+      \update_option(OPTION_TASKS_DONE, []);
+      return $tasks;
     });
 
     $uuids = [];
 
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
@@ -145,9 +145,9 @@ class JobTest extends \WP_UnitTestCase {
       ]
     ]);
     \do_action(CRON_JOB_HOOK);
-    $this->assertCount(1, $jobs_done, '1 job should be done');
+    $this->assertCount(1, $tasks_done, '1 task should be done');
 
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => self::CUSTOM_JOB_TYPE,
@@ -185,25 +185,25 @@ class JobTest extends \WP_UnitTestCase {
           'id' => $uuids[2],
         ]
       ], 
-      $jobs_done
+      $tasks_done
     );
   }
 
   /* 
-    test set_option job type
+    test set_option task type
   */
-  function test_job_type_set_option() {
-    $this->assertTrue(\has_filter(CRON_JOB_HOOK . '_set_option'), '"set_option" job type should be registered');
+  function test_task_type_set_option() {
+    $this->assertTrue(\has_filter(CRON_JOB_HOOK . '_set_option'), '"set_option" task type should be registered');
 
-    $jobs_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
-      $jobs_done = array_merge($jobs_done, $jobs);
-      \update_option(OPTION_JOBS_DONE, []);
-      return $jobs;
+    $tasks_done = [];
+    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+      $tasks_done = array_merge($tasks_done, $tasks);
+      \update_option(OPTION_TASKS_DONE, []);
+      return $tasks;
     });
 
     $uuids = [];
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => 'set_option',
@@ -217,7 +217,7 @@ class JobTest extends \WP_UnitTestCase {
     \do_action(CRON_JOB_HOOK);
     $this->assertEquals('yes', \get_option('foo'), 'option"foo" is set to "yes"');
 
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => 'set_option',
@@ -253,14 +253,14 @@ class JobTest extends \WP_UnitTestCase {
           'id' => $uuids[2],
         ],
       ], 
-      $jobs_done
+      $tasks_done
     );
   }
 
   /* 
-    test install_plugin job type
+    test install_plugin task type
   */
-  function test_job_type_install_plugin() {
+  function test_task_type_install_plugin() {
     $PLUGINS = [
       'hello-dolly/hello.php',
       'firefox-counter/firefox-counter.php'
@@ -276,16 +276,16 @@ class JobTest extends \WP_UnitTestCase {
     };
     \wp_cache_delete('plugins', 'plugins');
 
-    $jobs_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
-      $jobs_done = array_merge($jobs_done, $jobs);
-      \update_option(OPTION_JOBS_DONE, []);
-      return $jobs;
+    $tasks_done = [];
+    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+      $tasks_done = array_merge($tasks_done, $tasks);
+      \update_option(OPTION_TASKS_DONE, []);
+      return $tasks;
     });
 
     $uuids = [];
     # test installing hello-dolly plugin
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => 'install_plugin',
@@ -303,14 +303,14 @@ class JobTest extends \WP_UnitTestCase {
           'id' => $uuids[0],
         ],
       ], 
-      $jobs_done
+      $tasks_done
     );
 
     # test installing hello-dolly plugin again and firefox-counter plugin
-    $jobs_done = [];
+    $tasks_done = [];
     $uuids = [];
-    \update_option(OPTION_JOBS_DONE, []);
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_DONE, []);
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => 'install_plugin',
@@ -330,22 +330,22 @@ class JobTest extends \WP_UnitTestCase {
     ]);
     \do_action(CRON_JOB_HOOK);
 
-    $this->assertCount(2, $jobs_done, '2 jobs done');
-    $this->assertArrayHasKey('error', $jobs_done[0], 'install plugin "hello-dolly" should have an error');
+    $this->assertCount(2, $tasks_done, '2 tasks done');
+    $this->assertArrayHasKey('error', $tasks_done[0], 'install plugin "hello-dolly" should have an error');
    
     $this->assertEquals(
       [
         'success' => true,
         'id' => $uuids[1],
       ],
-      $jobs_done[1]
+      $tasks_done[1]
     );
 
     # test force installing hello-dolly plugin
-    $jobs_done = [];
+    $tasks_done = [];
     $uuids=[];
-    \update_option(OPTION_JOBS_DONE, []);
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_DONE, []);
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => 'install_plugin',
@@ -365,7 +365,7 @@ class JobTest extends \WP_UnitTestCase {
           'id' => $uuids[0],
         ],
       ],
-      $jobs_done
+      $tasks_done
     );
   }
 
@@ -373,17 +373,17 @@ class JobTest extends \WP_UnitTestCase {
     test complete example
   */
   function test_complex_example() {
-    $jobs_done = [];
+    $tasks_done = [];
     $uuids = [];
-    \update_option(OPTION_JOBS_DONE, []);
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
-      $jobs_done = array_merge($jobs_done, $jobs);
-      \update_option(OPTION_JOBS_DONE, []);
-      return $jobs;
+    \update_option(OPTION_TASKS_DONE, []);
+    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+      $tasks_done = array_merge($tasks_done, $tasks);
+      \update_option(OPTION_TASKS_DONE, []);
+      return $tasks;
     });
 
     # test installing hello-dolly plugin
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => 'install_plugin',
@@ -428,26 +428,26 @@ class JobTest extends \WP_UnitTestCase {
           'id' => $uuids[2],
         ]
       ], 
-      $jobs_done
+      $tasks_done
     );
   }
 
   /*
-   * test partial job execution
-   * using a custom sleep job we force that only the first job  of 2 enqueued jobs is executed at first run og the cron job
-   * at the second run the second job the rest of jobs qill get executed
+   * test partial task execution
+   * using a custom sleep task we force that only the first task  of 2 enqueued tasks is executed at first run og the cron task
+   * at the second run the second task the rest of tasks qill get executed
    * 
    * this testcase should be called as last one since it modifies the cron execution time for all follow up tests 
   */
-  function test_jobs_partial_done() {
+  function test_tasks_partial_done() {
     $SLEEP_JOB_TYPE = 'sleep';
     \add_filter( CRON_JOB_HOOK . '_' . $SLEEP_JOB_TYPE, function(array $payload) : array {
       $args = $payload['args'];
       
       if( !isset($args['value'])) {
-        return _create_job_error(
+        return _create_task_error(
           sprintf(
-            '%s : job "%s" requires "value" in args. payload was %s',
+            '%s : task "%s" requires "value" in args. payload was %s',
             CRON_JOB_HOOK,
             $payload['type'],
             \wp_json_encode($payload)
@@ -466,18 +466,18 @@ class JobTest extends \WP_UnitTestCase {
     });
     $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
 
-    $jobs_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $jobs) use (&$jobs_done) {
-      $jobs_done = array_merge($jobs_done, $jobs);
-      \update_option(OPTION_JOBS_DONE, []);
-      return $jobs;
+    $tasks_done = [];
+    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+      $tasks_done = array_merge($tasks_done, $tasks);
+      \update_option(OPTION_TASKS_DONE, []);
+      return $tasks;
     });
 
     // setting CRON_JOB_MAX_EXECUTION_TIME to 0 means 
-    // skip the execution time check and execute only one job per cron call 
+    // skip the execution time check and execute only one task per cron call 
     define('CRON_JOB_MAX_EXECUTION_TIME', 0);
     $uuids = [];
-    \update_option(OPTION_JOBS_SCHEDULED, [
+    \update_option(OPTION_TASKS_SCHEDULED, [
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => $SLEEP_JOB_TYPE,
@@ -495,11 +495,11 @@ class JobTest extends \WP_UnitTestCase {
       ]
     ]);
 
-    // execute cron job the first time
+    // execute cron task the first time
     \do_action(CRON_JOB_HOOK);
     $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
 
-    // ensure only first job was executed
+    // ensure only first task was executed
     $this->assertEquals(
       [
         [
@@ -507,13 +507,13 @@ class JobTest extends \WP_UnitTestCase {
           'value' => 2,
         ],
       ], 
-      $jobs_done
+      $tasks_done
     );
 
-    // execute cron job the second time
+    // execute cron task the second time
     \do_action(CRON_JOB_HOOK);
 
-    // ensure rest of jobs was executed
+    // ensure rest of tasks was executed
     $this->assertEquals( 'bar', \get_option('foo'), 'option foo should be set to "bar"');
 
     $this->assertEquals(
@@ -527,7 +527,7 @@ class JobTest extends \WP_UnitTestCase {
           'success' => true,
         ],
       ],
-      $jobs_done
+      $tasks_done
     );
   }
 }

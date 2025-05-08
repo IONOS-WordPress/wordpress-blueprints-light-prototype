@@ -37,7 +37,7 @@ curl -v \
   }
   ' | jq .
 
-# enqeue jobs to execute 
+# enqeue tasks to execute 
 curl -v \
   http://localhost:9090/enqueue \
   -H 'Accept: application/json' \

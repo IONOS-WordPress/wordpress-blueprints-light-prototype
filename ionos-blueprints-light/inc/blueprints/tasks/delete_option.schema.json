@@ -1,16 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "description": "Structure of the get_option job payload.",
+  "description": "Structure of the delete_option task payload.",
   "properties": {
     "id": {
       "type": "string",
-      "description": "The unique id of this job.",
+      "description": "The unique id of this task.",
       "format": "uuid"
     },
     "type": {
       "type": "string",
-      "description": "The type of this job.",
+      "description": "The type of this task.",
       "const": "set_option"
     },
     "args" : {
@@ -18,7 +18,7 @@
       "properties" : {
         "name": {
           "type": "string",
-          "description": "The name of the wordpress option to get."
+          "description": "The name of the wordpress option to set."
         }
       },
       "required": ["name"]

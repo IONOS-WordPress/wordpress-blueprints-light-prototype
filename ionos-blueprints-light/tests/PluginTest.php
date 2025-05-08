@@ -32,14 +32,14 @@ class PluginTest extends \WP_UnitTestCase {
     basic cron functionality checks 
   */
   function test_initial_settings_after_installation() {   
-    $this->assertFalse(\wp_next_scheduled(CRON_JOB_HOOK) !== false, 'The cron job is not yet scheduled before "init" action.');
+    $this->assertFalse(\wp_next_scheduled(CRON_JOB_HOOK) !== false, 'The cron task is not yet scheduled before "init" action.');
 
     \do_action( 'init' );
-    $this->assertTrue(\wp_next_scheduled(CRON_JOB_HOOK) !== false, 'The cron job is scheduled after "init" action.');
+    $this->assertTrue(\wp_next_scheduled(CRON_JOB_HOOK) !== false, 'The cron task is scheduled after "init" action.');
     
     \deactivate_plugins(SLUG);
     $this->assertFalse(\is_plugin_active(SLUG), 'The plugin is deactivated when plugin was deactivated.');
 
-    $this->assertFalse(\wp_next_scheduled(CRON_JOB_HOOK) !== false, 'The cron job is no more scheduled.');
+    $this->assertFalse(\wp_next_scheduled(CRON_JOB_HOOK) !== false, 'The cron task is no more scheduled.');
   }
 }

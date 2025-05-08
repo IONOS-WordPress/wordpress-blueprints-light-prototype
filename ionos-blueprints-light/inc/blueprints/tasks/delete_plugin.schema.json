@@ -1,16 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "description": "Structure of the activate_plugin job payload.",
+  "description": "Structure of the delete_plugin task payload.",
   "properties": {
     "id": {
       "type": "string",
-      "description": "The unique id of this job.",
+      "description": "The unique id of this task.",
       "format": "uuid"
     },
     "type": {
       "type": "string",
-      "description": "The type of this job.",
+      "description": "The type of this task.",
       "const": "activate_plugin"
     },
     "args" : {
@@ -23,7 +23,7 @@
         "force": {
           "type": "boolean",
           "default": false,
-          "description": "If true, the plugin will not throw an error if the plugin was already activated or is not installed"
+          "description": "If true, the plugin will not throw an error if the plugin was not existing or was active"
         }
       },
       "required": ["slug"]

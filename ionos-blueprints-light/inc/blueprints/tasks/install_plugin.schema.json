@@ -1,16 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "description": "Structure of the install_plugin job payload.",
+  "description": "Structure of the install_plugin task payload.",
   "properties": {
     "id": {
       "type": "string",
-      "description": "The unique id of this job.",
+      "description": "The unique id of this task.",
       "format": "uuid"
     },
     "type": {
       "type": "string",
-      "description": "The type of this job.",
+      "description": "The type of this task.",
       "const": "install_plugin"
     },
     "args" : {

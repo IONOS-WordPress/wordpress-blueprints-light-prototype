@@ -1,10 +1,10 @@
 <?php
 
-use function ionos_blueprints_light\ionos_blueprints_light\blueprints\_get_jobs_done;
-use function ionos_blueprints_light\ionos_blueprints_light\blueprints\enqueue_jobs;
+use function ionos_blueprints_light\ionos_blueprints_light\blueprints\_get_tasks_done;
+use function ionos_blueprints_light\ionos_blueprints_light\blueprints\enqueue_tasks;
 
 use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_JOBS_DONE;
+use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_TASKS_DONE;
 
 function send_success(array|null $payload=null, string $message='success', int $status=200) : void {
   header('Content-Type: application/json');
@@ -45,14 +45,14 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 # load wordpress
 require_once __DIR__ . '/../../wp-load.php';
-# load our blueprints job scheduler
+# load our blueprints task scheduler
 require_once __DIR__ . '/../../wp-content/plugins/ionos-blueprints-light/inc/blueprints/index.php';
 
-# disable cron job execution time limit since we are running not in the WP context
+# disable cron task execution time limit since we are running not in the WP context
 define('CRON_JOB_MAX_EXECUTION_TIME', -1);
 # set_time_limit(0);
 
-$validation_result = enqueue_jobs($payload);
+$validation_result = enqueue_tasks($payload);
 
 if (\is_wp_error($validation_result)) {
   $payload = $validation_result->get_error_data();
@@ -70,12 +70,12 @@ if (\is_wp_error($validation_result)) {
 
 \do_action(CRON_JOB_HOOK);
 
-$jobs_done = _get_jobs_done();
+$tasks_done = _get_tasks_done();
 
-# cleanup jobs done
-\delete_option(OPTION_JOBS_DONE);
+# cleanup tasks done
+\delete_option(OPTION_TASKS_DONE);
 
 send_success(
-  payload : $jobs_done, 
-  message: 'Jobs processed successfully'
+  payload : $tasks_done, 
+  message: 'Tasks processed successfully'
 );

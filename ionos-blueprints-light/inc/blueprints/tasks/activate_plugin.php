@@ -17,9 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
   $success = \activate_plugin($slug);
 
   if($success !== null && $force===false) {
-    return _create_job_error(
+    return _create_task_error(
       sprintf(
-        '%s : job "%s" failed to activate plugin "%s". ',
+        '%s : task "%s" failed to activate plugin "%s". ',
         CRON_JOB_HOOK,
         $payload['type'],
         $slug,
