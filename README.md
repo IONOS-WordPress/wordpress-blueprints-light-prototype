@@ -62,7 +62,27 @@ All code is self contained and has only WordPress as dependency.
       ' | jq .
     ```
 
-    The service returns the executed task ids, their execution exit code and returned data.
+    The service returns the executed task ids, their execution exit code and returned data : 
+
+    ```json
+    {
+      "success": "Tasks processed successfully",
+      "payload": [
+        {
+          "success": true,
+          "id": "4ac68232-bc87-4dec-b935-8c7fdca9d370"
+        },
+        {
+          "success": true,
+          "id": "c87572d9-73ec-460a-a885-9dca940db5ce"
+        },
+        {
+          "success": true,
+          "id": "c8d4e19a-0f69-492f-8f71-379787e5f462"
+        }
+      ]
+    }
+    ```
 
 - tasks will be validated against JSON Schema for validity when enqueued
 
