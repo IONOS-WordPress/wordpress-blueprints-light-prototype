@@ -1,6 +1,14 @@
 # Infrastructure for provisioning a WordPress instance from a separate PHP Process
 
-The goal of this prototype is finding a cheap way to provision 
+The goal of this prototype is finding a cheap way to provision a WordPress instance.
+
+The provisioning data will be provided in JSON. 
+
+The JSON maps to jobs/tasks (see ionos-blueprints-light/inc/blueprints/jobs/set_option.php as an example job).
+
+Provided Job JSON is valided against job specific JSON Schema (ionos-blueprints-light/inc/blueprints/jobs/set_option.schema.json) to verify the integrity of the job description.
+
+All code is self contained and has only WordPress as dependency.
 
 ## Current state
 
@@ -20,10 +28,9 @@ The goal of this prototype is finding a cheap way to provision
 
 ## Demo
 
-![Video](blueprints-demo.webm)
+[![Video](https://img.youtube.com/vi/UIRmfr2kZuY/maxresdefault.jpg)](https://www.youtube.com/watch?v=UIRmfr2kZuY)
 
-![Video](./blueprints-demo.webm)
-
+The Video shows how provision a wordpress instance using a ultra lightweight PHP service.
 
 ## Prerequisities
 
