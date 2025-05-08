@@ -14,21 +14,16 @@ fi
 readonly WP_ENV_HOME=$(pnpm -s wp-env  install-path 2>/dev/null)
 readonly WP_ENV_HASH=$(basename $WP_ENV_HOME)
 
-docker exec -i "${WP_ENV_HASH}-wordpress-1" /bin/bash <<EOF
-  set -x
-  command -v killall &>/dev/null || apt install -y psmisc
-  # command -v lsof &>/dev/null || apt install -y lsof
+exec docker exec -i "${WP_ENV_HASH}-wordpress-1" /bin/bash <<EOF
+  # set -x
+  command -v killall &>/dev/null || apt-get install -y psmisc
+  # command -v lsof &>/dev/null || apt-get install -y lsof
 
   # php_pid=$(lsof -t -i:9090)
   # [[ $? -eq 1 ]] && kill -9 $php_pid
   killall php &>/dev/null || true
 
   cd standalone/public_html/
-  php -S localhost:9090 index.php
+  # run not as root to prevent plugin deletion issues
+  runuser -u $USER -- php -S localhost:9090 index.php
 EOF
-
-# pnpm run wp-env run wordpress bash -c "$(cat <<EOF
-#   hostname
-#   pwd
-# EOF
-# )" 2>/dev/null
