@@ -1,10 +1,8 @@
 <?php
 
-// const ABSPATH = '/var/www/html/';
-
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-$route_php = __DIR__ . '/../api' . $path . '.php';
+$route_php = __DIR__ . '/../routes' . $path . '.php';
 
 header('X-Route-File: ' . $route_php);
 
@@ -24,5 +22,3 @@ function not_found() {
 function index() {
   echo "hello from index" . PHP_EOL;
 }
-
-//(preg_match('/^\/api\/v1\/.*$/', $path)) {

@@ -1,9 +1,6 @@
 {
   "core": null,
   "phpVersion": "8.3",
-  "plugins": [
-    "./ionos-blueprints-light"
-  ],
   "config": {
     "SCRIPT_DEBUG": true,
     "WP_DEBUG": true,
@@ -16,6 +13,6 @@
     "afterStart": "./wp-env-after-start.sh"
   },
   "mappings": {
-    "standalone": "./standalone"
+    "server": "./server"
   }
 }

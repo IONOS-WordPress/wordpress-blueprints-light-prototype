@@ -68,7 +68,7 @@ curl -v \
       "type": "set_option",
       "args":
       {
-        "name": "hello_world_lyrics",
+        "name": "hello_world",
         "value": "whoooo!"
       }
     }
@@ -87,7 +87,7 @@ curl -v \
       "type": "get_option",
       "args":
       {
-        "name": "hello_world_lyrics"
+        "name": "hello_world"
       }
     }
   ]

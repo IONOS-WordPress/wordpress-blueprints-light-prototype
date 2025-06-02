@@ -71,7 +71,7 @@ pnpm run wp-env run cli wp --quiet cron event list
 
 */
 
-namespace ionos_blueprints_light\ionos_blueprints_light\blueprints;
+namespace ionos_wordpress_blueprints;
 
 use const ionos_blueprints_light\ionos_blueprints_light\FILE;
 
@@ -88,67 +88,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * this is the time limit for each cron task call
- * by default 10 seconds will be used for each cron task call
- * 
- * You can customize the maximum execution time for each cron task call by defining a constant 
- * 'CRON_JOB_MAX_EXECUTION_TIME'. 
- * 
- * A value of 0 means execute only one task per cron call.
- * A value of -1 means no limit on execution time.
- *
- * @return  int max_execution_time in seconds per cron call
- */
-function _get_max_execution_time() {
-  if(defined('CRON_JOB_MAX_EXECUTION_TIME')) {
-    return constant('CRON_JOB_MAX_EXECUTION_TIME');
-  } else {
-    return 25;
-  }
-}
-
-function _cron_task_next_tick_delay() {
-  if(defined('CRON_JOB_NEXT_TICK_DELAY')) {
-    return constant('CRON_JOB_NEXT_TICK_DELAY');
-  } else {
-    // default will be 10 seconds
-    return 10;
-  }
-}
-
-/**
- * cleanup persisted options and cron tasks
- */ 
-\register_deactivation_hook(
-  file: FILE, 
-  callback: function () {
-    \wp_clear_scheduled_hook(CRON_JOB_HOOK);
-    \delete_option(OPTION_TASKS_SCHEDULED);
-    \delete_option(OPTION_TASKS_DONE);
-  }
-);
-
-/**
- * register cron task
- */
-\add_action(
-  hook_name: 'init', 
-  callback: function() : void {
-    if (\wp_next_scheduled(CRON_JOB_HOOK)===false) {
-      $success = \wp_schedule_event(
-        timestamp: time() + 10 * MINUTE_IN_SECONDS, // start first 10 minutes after first scheduling
-        recurrence: CRON_JOB_RECURRENCE, 
-        hook: CRON_JOB_HOOK
-      );
-    }
-  }
-);
-
-/**
  * validate and sanitize tasks according to their json schema definition
  */
-
-function enqueue_tasks(array $tasks) : bool|\WP_Error {
+function validate_tasks(array $tasks) : array|\WP_Error {
   foreach ($tasks as $index => $task) {
     if(!is_array($task)) {
       return new \WP_Error(
@@ -209,77 +151,23 @@ function enqueue_tasks(array $tasks) : bool|\WP_Error {
     $tasks[$index] = $result;
   }
 
-  // merge new tasks and already enqueued tasks
-  $tasks_scheduled = \get_option(OPTION_TASKS_SCHEDULED, []);
-  \update_option(OPTION_TASKS_SCHEDULED, array_merge($tasks_scheduled, $tasks));
-
-  return true;
+  return $tasks;
 }
 
-\add_filter(
-  hook_name: 'cron_schedules', 
-  callback: function(array $schedules) : array {
-    $schedules[CRON_JOB_RECURRENCE] = [
-      'interval' => 10 * MINUTE_IN_SECONDS,
-      'display'  => __('Every 10 Minutes')
-    ];
-    return $schedules;
-  }
-);
+function execute_tasks(array $tasks) : array|\WP_Error {
+  $task_results = [];
 
-\add_action(
-  hook_name: CRON_JOB_HOOK, 
-  callback: function () : void {
-    $tasks_scheduled = _get_tasks();
-    $tasks_done = _get_tasks_done();
-
-    $current_time = time();
-    
-    while(($task = array_shift($tasks_scheduled)) !== null) {
-      $result = _execute_task($task);
-      if (isset($result['error'])) {
-        error_log($result['error']);
-      }
-
-      \update_option(OPTION_TASKS_SCHEDULED, $tasks_scheduled);
-
-      $tasks_done[] = $result;
-      \update_option(OPTION_TASKS_DONE, $tasks_done);
-
-      $max_execution_time = _get_max_execution_time();
-      if($max_execution_time === 0) {
-        // abort after one task
-        break;
-      } else if($max_execution_time === -1) {
-        // no limit
-        continue;
-      } else if (time() - $current_time > $max_execution_time) {
-        // if there are still tasks scheduled, reschedule the cron task
-        // to run again in 10 seconds
-        if(count($tasks_scheduled) > 0) {
-          \wp_schedule_single_event(
-            timestamp: time() + _cron_task_next_tick_delay(), 
-            hook: CRON_JOB_HOOK
-          );
-        }
-        break;
-      }
+  while(($task = array_shift($tasks)) !== null) {
+    $result = _execute_task($task);
+    if (isset($result['error'])) {
+      error_log($result['error']);
     }
 
-    \do_action( CRON_JOB_HOOK_DONE_ACTION, $tasks_done);
+    $task_results[] = $result;
   }
-);
 
-\add_action( CRON_JOB_HOOK_DONE_ACTION, function(array $tasks_done) : void {
-  $tasks_done = _get_tasks_done();
-  
-  if (!empty($tasks_done)) {
-    // @FIXME: send proceeded task results back to hosting platform
-
-    // reset tasks done
-    // \update_option(OPTION_TASKS_DONE, []);
-  }
-});
+  return $task_results;
+}
 
 function _create_task_error(string $message, array $task) : array {
   return [
@@ -325,16 +213,6 @@ function _execute_task(array $task) : array {
   $result['id'] = $task['id'];
 
   return $result;
-}
-
-function _get_tasks() : array {
-  $tasks_scheduled = \get_option(OPTION_TASKS_SCHEDULED, []);
-  return $tasks_scheduled;
-}
-
-function _get_tasks_done() : array {
-  $tasks_done = \get_option(OPTION_TASKS_DONE, []);
-  return $tasks_done;
 }
 
 function _add_filter_task_validation(string $task_type, array $json_schema) : void {

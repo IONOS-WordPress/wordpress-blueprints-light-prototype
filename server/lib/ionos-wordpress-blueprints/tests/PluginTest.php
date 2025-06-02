@@ -9,25 +9,12 @@ namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
 
 // require $WP_TESTS_DIR . '/includes/bootstrap.php';
 
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
+use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
 use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
 
-require_once __DIR__ . '/../blueprints-light.php';
+require_once __DIR__ . '/../index.php';
 
 class PluginTest extends \WP_UnitTestCase {
-
-  public function setUp(): void {
-    parent::set_up();
-
-    \activate_plugin( SLUG );
-  }
-
-  public function tearDown(): void {
-    parent::tear_down();
-    
-    \deactivate_plugins(SLUG);
-  }
-
   /*
     basic cron functionality checks 
   */

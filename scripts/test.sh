@@ -8,6 +8,6 @@
 set -eo pipefail
 
 exec pnpm run wp-env run tests-cli \
-  --env-cwd=wp-content/plugins/ionos-blueprints-light \
+  --env-cwd=/var/www/html/server \
   bash -c \
-    "phpunit --debug --no-interaction --do-not-cache-result --prepend ~/.composer/vendor/autoload.php --bootstrap \$WP_TESTS_DIR/includes/bootstrap.php ${@} ./tests"
+    "phpunit --debug --no-interaction --do-not-cache-result --prepend ~/.composer/vendor/autoload.php --bootstrap \$WP_TESTS_DIR/includes/bootstrap.php ${@} ./lib/ionos-wordpress-blueprints/tests"

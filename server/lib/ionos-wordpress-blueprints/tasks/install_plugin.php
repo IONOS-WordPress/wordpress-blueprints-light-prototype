@@ -1,8 +1,8 @@
 <?php
 
-namespace ionos_blueprints_light\ionos_blueprints_light\blueprints;
+namespace ionos_wordpress_blueprints;
 
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
+use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
 
 if ( ! defined( 'ABSPATH' ) ) {
   die();

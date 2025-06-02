@@ -36,9 +36,8 @@ cat << EOF > '.vscode/launch.json'
       "stopOnEntry": false, // set to true for debugging this launch configuration
       "log": false,         // set to true to get extensive xdebug logs
       "pathMappings": {
-        "/var/www/html/wp-content/plugins/ionos-blueprints-light":"\${workspaceFolder}/ionos-blueprints-light",
+        "/var/www/html/server":"\${workspaceFolder}/server",
         "/var/www/html": "\${workspaceFolder}/${WPENV_INSTALLPATH}/WordPress",
-        // phpunit test path mappings
         "/wordpress-phpunit/includes": "\${workspaceFolder}/${WPENV_INSTALLPATH}/tests-WordPress-PHPUnit/tests/phpunit/includes",
         "/home/$USER/.composer/vendor": "\${workspaceFolder}/phpunit/vendor",
       }

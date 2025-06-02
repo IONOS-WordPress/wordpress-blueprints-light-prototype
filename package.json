@@ -1,8 +1,8 @@
 {
-  "name": "@ionos/wordpress-blueprints-light-prototype",
+  "name": "ionos-wordpress-blueprints",
   "dependencies": {
-    "@wordpress/env": "^10.21.0",
-    "@wordpress/scripts": "^30.14.1"
+    "@wordpress/env": "^10.24.0",
+    "@wordpress/scripts": "^30.17.0"
   },
   "scripts": {
     "start": "pnpm run wp-env start --xdebug | grep -vwi xdebug",
@@ -10,7 +10,6 @@
     "test": "./scripts/test.sh",
     "destroy": "echo 'y' | pnpm run wp-env destroy",
     "wp-env" : "WP_ENV_HOME=./wp-env-home wp-env",
-    "go-waas": "./scripts/go-waas.sh",
     "apiserver": "./scripts/apiserver.sh",
     "apiclient": "./scripts/apiclient.sh"
   }

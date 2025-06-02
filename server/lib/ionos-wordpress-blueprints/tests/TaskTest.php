@@ -2,32 +2,19 @@
 
 namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
 
-use function ionos_blueprints_light\ionos_blueprints_light\blueprints\_create_task_error;
+use function ionos_wordpress_blueprints\_create_task_error;
 
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK_DONE_ACTION;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_TASKS_DONE;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_TASKS_SCHEDULED;
+use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
+use const ionos_wordpress_blueprints\CRON_JOB_HOOK_DONE_ACTION;
+use const ionos_wordpress_blueprints\OPTION_TASKS_DONE;
+use const ionos_wordpress_blueprints\OPTION_TASKS_SCHEDULED;
 use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
 
-require_once __DIR__ . '/../blueprints-light.php';
+require_once __DIR__ . '/../index.php';
+
 class TaskTest extends \WP_UnitTestCase {
 
   const CUSTOM_JOB_TYPE = 'add_to_option';
-
-  public function setUp(): void {
-    parent::set_up();
-
-    \activate_plugin( SLUG );
-
-    static::_register_custom_task_type();
-  }
-
-  public function tearDown(): void {
-    parent::tear_down();
-
-    \deactivate_plugins(SLUG);
-  }
 
   private function _register_custom_task_type() {
     if(\has_filter(CRON_JOB_HOOK . '_' . self::CUSTOM_JOB_TYPE)) {

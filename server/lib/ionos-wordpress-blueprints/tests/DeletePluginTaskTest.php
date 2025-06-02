@@ -2,26 +2,14 @@
 
 namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
 
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\CRON_JOB_HOOK;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_TASKS_DONE;
-use const ionos_blueprints_light\ionos_blueprints_light\blueprints\OPTION_TASKS_SCHEDULED;
+use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
+use const ionos_wordpress_blueprints\OPTION_TASKS_DONE;
+use const ionos_wordpress_blueprints\OPTION_TASKS_SCHEDULED;
 use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
 
-require_once __DIR__ . '/../blueprints-light.php';
+require_once __DIR__ . '/../index.php';
 
 class DeletePluginTaskTest extends \WP_UnitTestCase {
-
-  public function setUp(): void {
-    parent::set_up();
-
-    \activate_plugin( SLUG );
-  }
-
-  public function tearDown(): void {
-    parent::tear_down();
-
-    \deactivate_plugins(SLUG);
-  }
 
   function test_delete_plugin_task() {
     $TEST_PLUGIN_SLUG = 'blueprint-test-plugin';
