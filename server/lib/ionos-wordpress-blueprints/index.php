@@ -235,6 +235,8 @@ function _add_filter_task_validation(string $task_type, array $json_schema) : vo
  * @param $path to load task types
  */
 function _load_task_types(string $path) : void {
+  # @FIXME: https://www.php.net/manual/en/phar.using.stream.php
+
   # load all task definitions
   foreach (glob($path . '/*.php') as $file) {
     require_once $file;

@@ -22,7 +22,8 @@ exec docker exec -i "${WP_ENV_HASH}-wordpress-1" /bin/bash <<EOF
   # [[ $? -eq 1 ]] && kill -9 $php_pid
   killall php &>/dev/null || true
 
-  cd ./server/public_html/
   # run not as root to prevent plugin deletion issues
-  runuser -u $USER -- php -S localhost:9090 index.php
+  cd ./server/public_html/ && runuser -u $USER -- php -S localhost:9090 index.php
+  
+  # runuser -u $USER -- php -S localhost:9090 build/server.phar
 EOF

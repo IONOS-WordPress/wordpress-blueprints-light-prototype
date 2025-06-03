@@ -33,6 +33,7 @@ if ($input === false) {
   send_error(message : "Failed to read input");
   exit;
 }
+
 $payload = $input==='' ? [] : json_decode($input, true);
 
 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -41,21 +42,21 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 # load wordpress
-require_once __DIR__ . '/../../wp-load.php';
-# load our blueprints task scheduler
+require_once '/var/www/html/wp-load.php';
+# load our blueprints task engine
 require_once __DIR__ . '/../lib/ionos-wordpress-blueprints/index.php';
 
 $validated_tasks = validate_tasks($payload);
 
-if (\is_wp_error($validation_result)) {
-  $payload = $validation_result->get_error_data();
+if (\is_wp_error($validated_tasks)) {
+  $payload = $validated_tasks->get_error_data();
   if (!is_null($payload) && !is_array($payload)) {
     $payload = [ 'data' => $payload ];
   }
 
   send_error(
     payload : $payload,
-    message : $validation_result->get_error_message(), 
+    message : $validated_tasks->get_error_message(), 
     status : 400,
   );
   exit;

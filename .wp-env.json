@@ -13,6 +13,7 @@
     "afterStart": "./wp-env-after-start.sh"
   },
   "mappings": {
-    "server": "./server"
+    "server": "./server",
+    "build": "./build"
   }
 }
