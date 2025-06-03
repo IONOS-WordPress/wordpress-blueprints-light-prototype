@@ -4,8 +4,8 @@ namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
 
 use function ionos_wordpress_blueprints\_create_task_error;
 
-use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
-use const ionos_wordpress_blueprints\CRON_JOB_HOOK_DONE_ACTION;
+use const ionos_wordpress_blueprints\TASK_EXECUTION_FILTER_PREFIX;
+use const ionos_wordpress_blueprints\TASK_EXECUTION_FILTER_PREFIX_DONE_ACTION;
 use const ionos_wordpress_blueprints\OPTION_TASKS_DONE;
 use const ionos_wordpress_blueprints\OPTION_TASKS_SCHEDULED;
 use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
@@ -17,11 +17,11 @@ class TaskTest extends \WP_UnitTestCase {
   const CUSTOM_JOB_TYPE = 'add_to_option';
 
   private function _register_custom_task_type() {
-    if(\has_filter(CRON_JOB_HOOK . '_' . self::CUSTOM_JOB_TYPE)) {
+    if(\has_filter(TASK_EXECUTION_FILTER_PREFIX . '_' . self::CUSTOM_JOB_TYPE)) {
       return;
     }
 
-    \add_filter( CRON_JOB_HOOK . '_' . self::CUSTOM_JOB_TYPE, function(array $payload) : array {
+    \add_filter( TASK_EXECUTION_FILTER_PREFIX . '_' . self::CUSTOM_JOB_TYPE, function(array $payload) : array {
       $args = $payload['args'];
       
       $option_name = $args['option'];
@@ -58,7 +58,7 @@ class TaskTest extends \WP_UnitTestCase {
     $this->assertCount(1, \get_option(OPTION_TASKS_SCHEDULED), 'A single task is scheduled');
     $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
 
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
     $this->assertSame( \get_option('foo'), 10, 'option "foo" should be set to 10 after action is triggered');
     
     $this->assertEmpty(\get_option(OPTION_TASKS_SCHEDULED, []), 'tasks should be empty');
@@ -75,7 +75,7 @@ class TaskTest extends \WP_UnitTestCase {
     ]);
     $this->assertCount(1, \get_option(OPTION_TASKS_SCHEDULED), 'A single task is scheduled');
 
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
     $this->assertSame( \get_option('foo'), 20, 'option "foo" should be set to 20 after action is triggered');
     $this->assertEmpty(\get_option(OPTION_TASKS_SCHEDULED, []), 'tasks should be empty');
 
@@ -101,7 +101,7 @@ class TaskTest extends \WP_UnitTestCase {
         ]
     ]);
     $this->assertCount(2, \get_option(OPTION_TASKS_SCHEDULED), '2 tasks are scheduled');
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
     $this->assertSame( \get_option('foo'), 70, 'option "foo" should be set to 20 after action is triggered');
     $this->assertEmpty(\get_option(OPTION_TASKS_SCHEDULED, []), 'tasks should be empty');
 	}
@@ -113,7 +113,7 @@ class TaskTest extends \WP_UnitTestCase {
   */
   function test_tasks_done() {
     $tasks_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+    \add_filter(TASK_EXECUTION_FILTER_PREFIX_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
       $tasks_done = array_merge($tasks_done, $tasks);
       \update_option(OPTION_TASKS_DONE, []);
       return $tasks;
@@ -131,7 +131,7 @@ class TaskTest extends \WP_UnitTestCase {
         ]
       ]
     ]);
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
     $this->assertCount(1, $tasks_done, '1 task should be done');
 
     \update_option(OPTION_TASKS_SCHEDULED, [
@@ -152,7 +152,7 @@ class TaskTest extends \WP_UnitTestCase {
         ]
       ]
     ]);
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
 
     $this->assertEquals(
       [
@@ -180,10 +180,10 @@ class TaskTest extends \WP_UnitTestCase {
     test set_option task type
   */
   function test_task_type_set_option() {
-    $this->assertTrue(\has_filter(CRON_JOB_HOOK . '_set_option'), '"set_option" task type should be registered');
+    $this->assertTrue(\has_filter(TASK_EXECUTION_FILTER_PREFIX . '_set_option'), '"set_option" task type should be registered');
 
     $tasks_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+    \add_filter(TASK_EXECUTION_FILTER_PREFIX_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
       $tasks_done = array_merge($tasks_done, $tasks);
       \update_option(OPTION_TASKS_DONE, []);
       return $tasks;
@@ -201,7 +201,7 @@ class TaskTest extends \WP_UnitTestCase {
       ]
     ]);
     $this->assertFalse(\get_option('foo'), 'option"foo" is not set');
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
     $this->assertEquals('yes', \get_option('foo'), 'option"foo" is set to "yes"');
 
     \update_option(OPTION_TASKS_SCHEDULED, [
@@ -222,7 +222,7 @@ class TaskTest extends \WP_UnitTestCase {
         ]
       ],
     ]);
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
     $this->assertEquals('maybe', \get_option('foo'), 'option "foo" is set to "maybe"');
 
     $this->assertEquals(
@@ -264,7 +264,7 @@ class TaskTest extends \WP_UnitTestCase {
     \wp_cache_delete('plugins', 'plugins');
 
     $tasks_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+    \add_filter(TASK_EXECUTION_FILTER_PREFIX_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
       $tasks_done = array_merge($tasks_done, $tasks);
       \update_option(OPTION_TASKS_DONE, []);
       return $tasks;
@@ -282,7 +282,7 @@ class TaskTest extends \WP_UnitTestCase {
         ],
       ],
     ]);
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
     $this->assertEquals(
       [
         [
@@ -315,7 +315,7 @@ class TaskTest extends \WP_UnitTestCase {
         ]
       ]
     ]);
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
 
     $this->assertCount(2, $tasks_done, '2 tasks done');
     $this->assertArrayHasKey('error', $tasks_done[0], 'install plugin "hello-dolly" should have an error');
@@ -343,7 +343,7 @@ class TaskTest extends \WP_UnitTestCase {
         ],
       ],
     ]);
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
 
     $this->assertEquals(
       [
@@ -363,7 +363,7 @@ class TaskTest extends \WP_UnitTestCase {
     $tasks_done = [];
     $uuids = [];
     \update_option(OPTION_TASKS_DONE, []);
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+    \add_filter(TASK_EXECUTION_FILTER_PREFIX_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
       $tasks_done = array_merge($tasks_done, $tasks);
       \update_option(OPTION_TASKS_DONE, []);
       return $tasks;
@@ -398,7 +398,7 @@ class TaskTest extends \WP_UnitTestCase {
       ],
     ]);
 
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
 
     $this->assertEquals(
       [
@@ -428,14 +428,14 @@ class TaskTest extends \WP_UnitTestCase {
   */
   function test_tasks_partial_done() {
     $SLEEP_JOB_TYPE = 'sleep';
-    \add_filter( CRON_JOB_HOOK . '_' . $SLEEP_JOB_TYPE, function(array $payload) : array {
+    \add_filter( TASK_EXECUTION_FILTER_PREFIX . '_' . $SLEEP_JOB_TYPE, function(array $payload) : array {
       $args = $payload['args'];
       
       if( !isset($args['value'])) {
         return _create_task_error(
           sprintf(
             '%s : task "%s" requires "value" in args. payload was %s',
-            CRON_JOB_HOOK,
+            TASK_EXECUTION_FILTER_PREFIX,
             $payload['type'],
             \wp_json_encode($payload)
           ),
@@ -454,7 +454,7 @@ class TaskTest extends \WP_UnitTestCase {
     $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
 
     $tasks_done = [];
-    \add_filter(CRON_JOB_HOOK_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
+    \add_filter(TASK_EXECUTION_FILTER_PREFIX_DONE_ACTION, function(array $tasks) use (&$tasks_done) {
       $tasks_done = array_merge($tasks_done, $tasks);
       \update_option(OPTION_TASKS_DONE, []);
       return $tasks;
@@ -483,7 +483,7 @@ class TaskTest extends \WP_UnitTestCase {
     ]);
 
     // execute cron task the first time
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
     $this->assertFalse( \get_option('foo'), 'option foo should not be set yet');
 
     // ensure only first task was executed
@@ -498,7 +498,7 @@ class TaskTest extends \WP_UnitTestCase {
     );
 
     // execute cron task the second time
-    \do_action(CRON_JOB_HOOK);
+    \do_action(TASK_EXECUTION_FILTER_PREFIX);
 
     // ensure rest of tasks was executed
     $this->assertEquals( 'bar', \get_option('foo'), 'option foo should be set to "bar"');

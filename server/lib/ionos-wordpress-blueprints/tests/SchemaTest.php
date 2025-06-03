@@ -1,23 +1,22 @@
 <?php
 
-namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
+namespace ionos_wordpress_blueprints\phpunit;
+
+use const ionos_wordpress_blueprints\TASK_EXECUTION_FILTER_PREFIX;
+use const ionos_wordpress_blueprints\TASK_VALIDATION_FILTER_PREFIX;
 
 use function ionos_wordpress_blueprints\_add_filter_task_validation;
-use function ionos_wordpress_blueprints\enqueue_tasks;
-
-use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
-use const ionos_wordpress_blueprints\OPTION_TASKS_SCHEDULED;
-use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
+use function ionos_wordpress_blueprints\validate_tasks;
 
 require_once __DIR__ . '/../index.php';
 
 class SchemaTest extends \WP_UnitTestCase {
 
   function test_task_args_invalid() {
-    $result = enqueue_tasks([ "this is not a valid task" ]);
+    $result = validate_tasks([ "this is not a valid task" ]);
     $this->assertInstanceOf( \WP_Error::class, $result, 'task is expected to be an associative array' );
 
-    $result = enqueue_tasks(
+    $result = validate_tasks(
       [
         [
           'id' => $uuids[]=\wp_generate_uuid4(),
@@ -31,7 +30,7 @@ class SchemaTest extends \WP_UnitTestCase {
     );
     $this->assertInstanceOf( \WP_Error::class, $result, 'task configurations must be valid according to their json schema definition');
 
-    $result = enqueue_tasks(
+    $result = validate_tasks(
       [
         [
           // 'id' => $uuids[]=\wp_generate_uuid4(), // required field "id" is missing
@@ -45,7 +44,7 @@ class SchemaTest extends \WP_UnitTestCase {
     );
     $this->assertInstanceOf( \WP_Error::class, $result, 'task configurations must be valid according to their json schema definition' );
 
-    $result = enqueue_tasks(
+    $result = validate_tasks(
       [
         [
           'id' => $uuids[]=\wp_generate_uuid4(), 
@@ -70,15 +69,15 @@ class SchemaTest extends \WP_UnitTestCase {
       ]
     ];
 
-    $result = enqueue_tasks( [$JOB]);
-    $this->assertTrue($result, 'task should be valid' );
-    $this->assertEquals([$JOB], \get_option(OPTION_TASKS_SCHEDULED));
+    $result = validate_tasks( [$JOB]);
+    $this->assertIsArray($result, 'task should be valid' );
+    $this->assertEquals([$JOB], $result, 'task should be returned as is');
   }  
 
   function test_manual_task_registration() {
     // declare a simple task adding 2 number arguments left and right
     \add_filter(
-      hook_name:CRON_JOB_HOOK . '_' . __FUNCTION__,
+      hook_name:TASK_EXECUTION_FILTER_PREFIX . '_' . __FUNCTION__,
       callback: fn(array $payload) : array => [
         'value' => $payload['args']['left'] + $payload['args']['right'],
       ],
@@ -115,7 +114,7 @@ class SchemaTest extends \WP_UnitTestCase {
       ],
     );
 
-    $result = enqueue_tasks([
+    $validated_tasks = validate_tasks([
       [
         'id' => \wp_generate_uuid4(), 
         'type' => __FUNCTION__,
@@ -126,8 +125,7 @@ class SchemaTest extends \WP_UnitTestCase {
         'foo' => 'bar', // additional properties are not allowed
       ]
     ]);
-    $scheduled_tasks = \get_option(OPTION_TASKS_SCHEDULED);
-    $this->assertCount(1, $scheduled_tasks);
-    $this->assertFalse(isset($scheduled_tasks[0]['foo']), 'foo property should not be present in the scheduled task');
+    $this->assertCount(1, $validated_tasks);
+    $this->assertFalse(isset($validated_tasks[0]['foo']), 'foo property should not be present in the scheduled task');
   }
 }

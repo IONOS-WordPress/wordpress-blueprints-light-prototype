@@ -2,13 +2,13 @@
 
 namespace ionos_wordpress_blueprints;
 
-use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
+use const ionos_wordpress_blueprints\TASK_EXECUTION_FILTER_PREFIX;
 
 if ( ! defined( 'ABSPATH' ) ) {
   die();
 }
 
-\add_filter( CRON_JOB_HOOK . '_delete_plugin', function(array $payload) : array {
+\add_filter( TASK_EXECUTION_FILTER_PREFIX . '_delete_plugin', function(array $payload) : array {
   $args = $payload['args'];
   
   $slug = $args['slug'];
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
       return _create_task_error(
         sprintf(
           '%s : task "%s" failed to delete plugin "%s". Plugin is still active.',
-          CRON_JOB_HOOK,
+          TASK_EXECUTION_FILTER_PREFIX,
           $payload['type'],
           $slug,
         ),
@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     return _create_task_error(
       sprintf(
         '%s : task "%s" failed to delete plugin "%s". ',
-        CRON_JOB_HOOK,
+        TASK_EXECUTION_FILTER_PREFIX,
         $payload['type'],
         $slug,
       \is_wp_error($success) ? $success->get_error_message() : 'unknown error',

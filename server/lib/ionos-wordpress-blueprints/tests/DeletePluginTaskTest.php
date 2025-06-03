@@ -1,13 +1,10 @@
 <?php
 
-namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
-
-use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
-use const ionos_wordpress_blueprints\OPTION_TASKS_DONE;
-use const ionos_wordpress_blueprints\OPTION_TASKS_SCHEDULED;
-use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
+namespace ionos_wordpress_blueprints\phpunit;
 
 require_once __DIR__ . '/../index.php';
+
+use function ionos_wordpress_blueprints\execute_tasks;
 
 class DeletePluginTaskTest extends \WP_UnitTestCase {
 
@@ -32,7 +29,7 @@ EOT;
 
     $this->assertTrue( \is_plugin_active( $TEST_PLUGIN_SLUG ) );
 
-    \update_option(OPTION_TASKS_SCHEDULED, [
+    $result = execute_tasks([
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => 'delete_plugin',
@@ -41,16 +38,15 @@ EOT;
           'force' => true,
         ]
       ],
-    ]);
+    ]);  
 
-    // execute cron task the first time
-    \do_action(CRON_JOB_HOOK);
-
-    $tasks_done = \get_option(OPTION_TASKS_DONE);
+    if (is_wp_error($result)) {
+      $this->fail('Task execution failed: ' . $result->get_error_message());
+    }
 
     // verify option value matches preset value
-    $this->assertCount(1, $tasks_done);
-    $this->assertTrue($tasks_done[0]['success'], 'task should be successful');
+    $this->assertCount(1, $result);
+    $this->assertTrue($result[0]['success'], 'task should be successful');
     
     $this->assertFalse( \is_plugin_active( $TEST_PLUGIN_SLUG ), 'plugin should not be active' );
     $this->assertFileDoesNotExist( WP_PLUGIN_DIR . "/{$TEST_PLUGIN_SLUG}", 'plugin should be deleted' );

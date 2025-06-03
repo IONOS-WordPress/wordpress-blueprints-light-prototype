@@ -73,15 +73,8 @@ pnpm run wp-env run cli wp --quiet cron event list
 
 namespace ionos_wordpress_blueprints;
 
-use const ionos_blueprints_light\ionos_blueprints_light\FILE;
-
-const OPTION_TASKS_SCHEDULED = 'ionos_blueprints_tasks';
-const OPTION_TASKS_DONE = 'ionos_blueprints_tasks_done';
-
-const JOB_VALIDATION_HOOK_PREFIX = 'ionos_blueprints_task_validation_';
-const CRON_JOB_HOOK = 'ionos_blueprints_cron_task';
-const CRON_JOB_HOOK_DONE_ACTION = OPTION_TASKS_DONE . '_action';
-const CRON_JOB_RECURRENCE = 'ionos_blueprints_cron_task_recurrence';
+const TASK_VALIDATION_FILTER_PREFIX = 'ionos_blueprints_task_validation_';
+const TASK_EXECUTION_FILTER_PREFIX = 'ionos_blueprints_task_execution_';
 
 if ( ! defined( 'ABSPATH' ) ) {
   die();
@@ -110,15 +103,15 @@ function validate_tasks(array $tasks) : array|\WP_Error {
 
     $task_type = $task['type'];
 
-    if(!\has_filter(CRON_JOB_HOOK . '_' . $task_type)) {
+    if(!\has_filter(TASK_EXECUTION_FILTER_PREFIX . '_' . $task_type)) {
       return new \WP_Error(
         'invalid_task_type',
-        sprintf('task type "%s"(filter=%s) is unknown : No filter registered', $task_type, CRON_JOB_HOOK . '_' . $task_type),
+        sprintf('task type "%s"(filter=%s) is unknown : No filter registered', $task_type, TASK_EXECUTION_FILTER_PREFIX . '_' . $task_type),
         $task,
       );
     }
 
-    if(!\has_filter(JOB_VALIDATION_HOOK_PREFIX . $task_type)) {
+    if(!\has_filter(TASK_VALIDATION_FILTER_PREFIX . $task_type)) {
       error_log(sprintf(
         'task(=%s) has no validation filter registered for type "%s"',
         $task_type,
@@ -129,7 +122,7 @@ function validate_tasks(array $tasks) : array|\WP_Error {
 
     // validate filter against json schema
     $result = \apply_filters(
-      hook_name: JOB_VALIDATION_HOOK_PREFIX . $task_type,
+      hook_name: TASK_VALIDATION_FILTER_PREFIX . $task_type,
       value: $task
     );
 
@@ -178,12 +171,12 @@ function _create_task_error(string $message, array $task) : array {
 }
 
 function _execute_task(array $task) : array {
-  $HOOK_NAME = CRON_JOB_HOOK . '_' . $task['type'];
+  $HOOK_NAME = TASK_EXECUTION_FILTER_PREFIX . '_' . $task['type'];
   if (!has_filter($HOOK_NAME)) {
     return _create_task_error(
       sprintf(
         '%s : no filter registered for task "%s"(hook_name="%s"). payload was %s',
-        CRON_JOB_HOOK,
+        TASK_EXECUTION_FILTER_PREFIX,
         $task['type'],
         $HOOK_NAME,
         \wp_json_encode($task)
@@ -200,7 +193,7 @@ function _execute_task(array $task) : array {
       $result = _create_task_error(
         sprintf(
           '%s : filter "%s"(hook_name="%s") returned a non array result. result was %s',
-          CRON_JOB_HOOK,
+          TASK_EXECUTION_FILTER_PREFIX,
           $task['type'],
           $HOOK_NAME,
           \wp_json_encode($result)
@@ -217,7 +210,7 @@ function _execute_task(array $task) : array {
 
 function _add_filter_task_validation(string $task_type, array $json_schema) : void {
   \add_filter(
-    hook_name: JOB_VALIDATION_HOOK_PREFIX . $task_type,
+    hook_name: TASK_VALIDATION_FILTER_PREFIX . $task_type,
     callback: function(array $task) use ($json_schema, $task_type) {
       $task = \rest_sanitize_value_from_schema(
         value: $task,

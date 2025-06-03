@@ -1,13 +1,10 @@
 <?php
 
-namespace ionos_blueprints_light\ionos_blueprints_light\phpunit;
-
-use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
-use const ionos_wordpress_blueprints\OPTION_TASKS_DONE;
-use const ionos_wordpress_blueprints\OPTION_TASKS_SCHEDULED;
-use const ionos_blueprints_light\ionos_blueprints_light\SLUG;
+namespace ionos_wordpress_blueprints\phpunit;
 
 require_once __DIR__ . '/../index.php';
+
+use function ionos_wordpress_blueprints\execute_tasks;
 
 class GetOptionTaskTest extends \WP_UnitTestCase {
 
@@ -17,7 +14,7 @@ class GetOptionTaskTest extends \WP_UnitTestCase {
   function test_delete_option_task() {
     \add_option(self::OPTION_NAME, self::OPTION_VALUE);
 
-    \update_option(OPTION_TASKS_SCHEDULED, [
+    $result = execute_tasks([
       [
         'id' => $uuids[]=\wp_generate_uuid4(),
         'type' => 'get_option',
@@ -27,16 +24,15 @@ class GetOptionTaskTest extends \WP_UnitTestCase {
       ],
     ]);
 
-    // execute cron task the first time
-    \do_action(CRON_JOB_HOOK);
-
-    $tasks_done = \get_option(OPTION_TASKS_DONE);
+    if (is_wp_error($result)) {
+      $this->fail('Task execution failed: ' . $result->get_error_message());
+    }
 
     // verify option value matches preset value
-    $this->assertCount(1, $tasks_done);
-    $this->assertArrayHasKey('value', $tasks_done[0]);
+    $this->assertCount(1, $result);
+    $this->assertArrayHasKey('value', $result[0]);
     
 
-    $this->assertEquals( self::OPTION_VALUE, $tasks_done[0]['value'], 'option should be set' );
+    $this->assertEquals( self::OPTION_VALUE, $result[0]['value'], 'option should be set' );
   }
 }

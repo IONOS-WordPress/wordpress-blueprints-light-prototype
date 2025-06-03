@@ -2,13 +2,13 @@
 
 namespace ionos_wordpress_blueprints;
 
-use const ionos_wordpress_blueprints\CRON_JOB_HOOK;
+use const ionos_wordpress_blueprints\TASK_EXECUTION_FILTER_PREFIX;
 
 if ( ! defined( 'ABSPATH' ) ) {
   die();
 }
 
-\add_filter( CRON_JOB_HOOK . '_install_plugin', function(array $payload) : array {
+\add_filter( TASK_EXECUTION_FILTER_PREFIX . '_install_plugin', function(array $payload) : array {
   $args = $payload['args'];
   
   $slug = $args['slug'];
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     return _create_task_error(
       sprintf(
         '%s : task "%s" failed to download plugin "%s". http_status=%s',
-        CRON_JOB_HOOK,
+        TASK_EXECUTION_FILTER_PREFIX,
         $payload['type'],
         $slug,
         \wp_remote_retrieve_response_code($response),
@@ -41,7 +41,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     return _create_task_error(
       sprintf(
         '%s : task "%s" failed to create temporary file for plugin "%s".',
-        CRON_JOB_HOOK,
+        TASK_EXECUTION_FILTER_PREFIX,
         $payload['type'],
         $slug
       ),
@@ -53,7 +53,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     return _create_task_error(
       sprintf(
         '%s : task "%s" failed to write downloaded plugin "%s" to temporary file.',
-        CRON_JOB_HOOK,
+        TASK_EXECUTION_FILTER_PREFIX,
         $payload['type'],
         $slug
       ),
@@ -72,7 +72,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         return _create_task_error(
           sprintf(
             '%s : task "%s" aborted because plugin "%s" is already installed.',
-            CRON_JOB_HOOK,
+            TASK_EXECUTION_FILTER_PREFIX,
             $payload['type'],
             $slug
           ),
@@ -89,7 +89,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     return _create_task_error(
       sprintf(
         '%s : %stask "%s" f%sailed to unzip plugin "%s". %s',
-        CRON_JOB_HOOK,
+        TASK_EXECUTION_FILTER_PREFIX,
         $payload['type'],
         $slug,
         \is_wp_error($success) ? $success->get_error_message() : 'unknown error',
