@@ -73,6 +73,9 @@ pnpm run wp-env run cli wp --quiet cron event list
 
 namespace ionos_wordpress_blueprints;
 
+use DirectoryIterator;
+use Phar;
+
 const TASK_VALIDATION_FILTER_PREFIX = 'ionos_blueprints_task_validation_';
 const TASK_EXECUTION_FILTER_PREFIX = 'ionos_blueprints_task_execution_';
 
@@ -234,11 +237,18 @@ function _add_filter_task_validation(string $task_type, array $json_schema) : vo
  * 
  * @param $path to load task types
  */
-function _load_task_types(string $path) : void {
+function _load_task_types() : void {
   # @FIXME: https://www.php.net/manual/en/phar.using.stream.php
-
+  
   # load all task definitions
-  foreach (glob($path . '/*.php') as $file) {
+  foreach (new DirectoryIterator(__DIR__ . '/tasks') as $file_info) {
+    if ($file_info->isDot() || !$file_info->isFile() || $file_info->getExtension() !== 'php') {
+      continue;
+      continue;
+    }
+
+    $file = $file_info->getPathname();
+
     require_once $file;
     
     $schema_file = preg_replace('/\.php$/', '.schema.json', $file);
@@ -274,4 +284,4 @@ function _load_task_types(string $path) : void {
   }
 }
 
-_load_task_types(__DIR__ . '/tasks');
+_load_task_types();

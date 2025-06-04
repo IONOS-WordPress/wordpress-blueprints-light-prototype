@@ -8,6 +8,8 @@ $files = $phar->buildFromDirectory(
   '/^\/.*(?<!Test\.php)$/' // exclude all files ending with "Test.php"
 );
 
-var_dump($files);
-
 $phar->setStub($phar->createDefaultStub('public_html/index.php', 'public_html/index.php'));
+
+$phar->compress(Phar::GZ);
+
+echo json_encode(array_keys($files), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;

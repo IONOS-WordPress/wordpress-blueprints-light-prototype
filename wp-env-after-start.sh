@@ -37,6 +37,7 @@ cat << EOF > '.vscode/launch.json'
       "log": false,         // set to true to get extensive xdebug logs
       "pathMappings": {
         "/var/www/html/server":"\${workspaceFolder}/server",
+        "/var/www/html/build/server.phar": "\${workspaceFolder}/build/server.phar",
         "/var/www/html": "\${workspaceFolder}/${WPENV_INSTALLPATH}/WordPress",
         "/wordpress-phpunit/includes": "\${workspaceFolder}/${WPENV_INSTALLPATH}/tests-WordPress-PHPUnit/tests/phpunit/includes",
         "/home/$USER/.composer/vendor": "\${workspaceFolder}/phpunit/vendor",

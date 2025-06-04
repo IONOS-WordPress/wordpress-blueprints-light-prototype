@@ -16,9 +16,7 @@ All code is self contained and has only WordPress as dependency.
 
 ## Features
 
-- WordPress plugin : tasks can be injected via WordPress option. Equeued tasks will be executed via WordPress CRON
-
-- a very lightweight mini standalone service (see ./standalone) can be runned using PHP built-in Webserver to provision the WordPress instance : `pnpm apiserver`
+- a very lightweight mini standalone service (see `./server`) can be runned using PHP built-in Webserver to provision the WordPress instance 
 
   - you can inject tasks to execute by a simple `curl` statement against the standalone service
 
@@ -99,3 +97,109 @@ The Video shows how provision a wordpress instance using a ultra lightweight PHP
 - `Docker`
 - `pnpm`
 
+## Setup
+
+- startup wp-env (a conterized wordpress installation) : `pnpm start`
+
+- build the php PHAR archive containing the api server : `pnpm build`
+
+  This command build the a PHP PHAR archive containing the whole apiserver in a single PHAR file.
+
+- start the blueprints api server : `pnpm apiserver --phar`
+
+  This command start the api server inside the wordpress container of wp-env. 
+
+  Inside the wp-env wordpress container the api server is started using the PHP built-in webserver on port 9090.
+
+  The api server is only available within the wordpress container of wp-env.
+
+- open another terminal and execute `pnpm apiclient`. 
+
+  This will open a shell in the wordpress container of wp-env. 
+
+  Here you can execute curl commands against the api server. 
+
+  Example curl statements : 
+
+  ```shell
+  # call echo endpoint 
+  curl -v \
+    http://localhost:9090/echo \
+    -H 'Accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '
+    {
+      "foo": "bar",
+      "lorem": "ipsum"
+    }
+    ' | jq .
+
+  # install and activate a plugin. set an option
+  curl -v \
+    http://localhost:9090/enqueue \
+    -H 'Accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '
+    [
+      {
+        "id": "4ac68232-bc87-4dec-b935-8c7fdca9d370",
+        "type": "install_plugin",
+        "args":
+        {
+          "url": "https://downloads.wordpress.org/plugin/hello-world.zip",
+          "slug": "hello-world/hello-world.php",
+          "force": true
+        }
+      },
+      {
+        "id": "c87572d9-73ec-460a-a885-9dca940db5ce",
+        "type": "activate_plugin",
+        "args":
+        {
+          "slug": "hello-world/hello-world.php",
+          "force": true
+        }
+      },
+      {
+        "id": "c8d4e19a-0f69-492f-8f71-379787e5f462",
+        "type": "set_option",
+        "args":
+        {
+          "name": "hello_world",
+          "value": "whoooo!"
+        }
+      }
+    ]
+    ' | jq .
+
+  # get option 
+  curl -v \
+    http://localhost:9090/enqueue \
+    -H 'Accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -d '
+    [
+      {
+        "id": "4ac68232-bc87-4dec-b935-8c7fdca9d371",
+        "type": "get_option",
+        "args":
+        {
+          "name": "hello_world"
+        }
+      }
+    ]
+    ' | jq .
+
+  ```
+
+# Development
+
+- start wp-env : `pnpm start`
+
+- start watching changes in files of directory `./server` and rebuild/restart api server : `pnpm dev`
+
+  The `pnpm start` command generated a vscode launch configuration. You can debug into the api server code when processing requests.
+
+  To start debugging you simply execute a curl statement in the `pnpm apiclient` shell against the server.
+
+  _Alternatively you can start the dev command using `--mode phar` option to develop against the phar archive._
